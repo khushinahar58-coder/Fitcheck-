@@ -1,0 +1,53 @@
+<!doctype html>
+<!-- Source for banner.png (1600x640). Re-render from this folder with:
+     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --disable-gpu --hide-scrollbars \
+       --window-size=1600,640 --force-device-scale-factor=1 --virtual-time-budget=6000 \
+       --screenshot=banner.png "file://$PWD/banner.html" -->
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#1E1A16}
+.hero{position:relative;width:1600px;height:640px;overflow:hidden;color:#FAF8F5;font-family:'Playfair Display',Georgia,serif;
+ background:radial-gradient(900px 520px at 22% 38%,#3A332B 0%,#1E1A16 62%),#1E1A16}
+.rule{position:absolute;left:80px;width:820px;top:78px;height:1px;background:linear-gradient(90deg,#D4A856,rgba(212,168,86,0))}
+.kicker{position:absolute;left:80px;top:96px;font-family:'IBM Plex Mono',Menlo,monospace;font-size:17px;letter-spacing:.22em;color:#D4A856;text-transform:uppercase}
+h1{position:absolute;left:76px;top:136px;margin:0;font-weight:600;font-size:118px;line-height:1;letter-spacing:-.015em;color:#FEFCFA}
+.tag{position:absolute;left:80px;top:272px;font-style:italic;font-weight:400;font-size:44px;color:#E5BCA8}
+.flow{position:absolute;left:80px;top:350px;font-family:'IBM Plex Mono',Menlo,monospace;font-size:18px;color:#CFC9C0;letter-spacing:.02em}
+.flow span{color:#D4A856;margin:0 10px}
+.team{position:absolute;left:80px;top:398px;font-family:'IBM Plex Mono',Menlo,monospace;font-size:18px;color:#A89F92;letter-spacing:.03em}
+.team b{color:#D4A856;font-weight:500;letter-spacing:.16em;margin-right:16px}
+.team i{font-style:normal;color:#F5F0E9}
+.stats{position:absolute;left:80px;bottom:62px;display:flex;gap:48px}
+.stat{border-left:2px solid #C47E60;padding-left:16px}
+.stat .n{font-family:'Playfair Display',serif;font-weight:600;font-size:40px;line-height:1;color:#FEFCFA}
+.stat .l{font-family:'IBM Plex Mono',Menlo,monospace;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#A89F92;margin-top:9px}
+.phones{position:absolute;right:40px;top:0;width:640px;height:640px}
+.phone{position:absolute;width:262px;border-radius:30px;overflow:hidden;box-shadow:0 30px 60px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.07)}
+.phone img{display:block;width:100%}
+.p1{left:28px;top:118px;transform:rotate(-7deg);opacity:.9}
+.p2{left:204px;top:58px;z-index:2}
+.p3{left:380px;top:122px;transform:rotate(7deg);opacity:.9}
+.fade{position:absolute;left:0;right:0;bottom:0;height:190px;background:linear-gradient(180deg,rgba(30,26,22,0),#1E1A16 80%);z-index:3}
+</style></head><body>
+<div class="hero">
+ <div class="rule"></div>
+ <div class="kicker">Coding with GPT · UVA Darden · Fall 2026</div>
+ <h1>FitCheck</h1>
+ <div class="tag">More outfits. Same closet.</div>
+ <div class="flow">occasion<span>→</span>outfit<span>→</span>weather<span>→</span>wear history</div>
+ <div class="team"><b>TEAM</b><i>Khushi Nahar</i> · <i>Nishtha Khosla</i> · <i>Bakul Badwal</i></div>
+ <div class="stats">
+  <div class="stat"><div class="n">10</div><div class="l">screens built</div></div>
+  <div class="stat"><div class="n">5</div><div class="l">occasions</div></div>
+  <div class="stat"><div class="n">18</div><div class="l">curated looks</div></div>
+  <div class="stat"><div class="n">25</div><div class="l">pieces · sample closet</div></div>
+ </div>
+ <div class="phones">
+  <div class="phone p1"><img src="01-home.png"></div>
+  <div class="phone p2"><img src="02-outfits.png"></div>
+  <div class="phone p3"><img src="04-wardrobe.png"></div>
+  <div class="fade"></div>
+ </div>
+</div>
+</body></html>

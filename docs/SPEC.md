@@ -1,9 +1,11 @@
 # FitCheck — Product Spec
 
-**Status:** Draft for team discussion · **Updated:** 2026-10-27
+**Status:** Draft for team discussion · **Updated:** 2026-10-27 · **Read with:** [README](../README.md) · [Ideas backlog](IDEAS-BACKLOG.md)
 
 Sections 1–3 describe the product and the build as they stand. Section 4 onward is a **proposal**, not an agreed plan.
 Change it freely.
+
+**Contents:** [1. Product](#1-product) · [2. User stories](#2-user-stories) · [3. Current build](#3-current-build-bolt-export-2026-10-27) · [4. Proposed v1 scope](#4-proposed-v1-scope) · [5. Success measures](#5-success-measures-draft-oecs) · [6. AI evaluation plan](#6-ai-evaluation-plan-draft) · [7. Open questions](#7-open-questions)
 
 ---
 
@@ -68,8 +70,11 @@ but never imported. State lives in `localStorage` (`fitcheck-wardrobe`, `fitchec
 - Requested: layers (now built), temperature units, a calendar (now built), exact wear history (now built), and
   clarity on whether recommendations are generated (they are not yet).
 
-**Known issues:** photos stored as base64 in `localStorage` (~5 MB cap); no temperature unit; 4 lint errors (unused
-imports).
+**Known issues**
+
+- Photos are stored as base64 in `localStorage` (~5 MB cap).
+- No temperature unit on the weather card.
+- 4 lint errors (unused imports). Typecheck and build pass.
 
 ## 4. Proposed v1 Scope
 
