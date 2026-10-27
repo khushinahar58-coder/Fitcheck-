@@ -116,6 +116,14 @@ npm run dev
 
 To reset the sample wardrobe, clear the site's `localStorage` (keys starting with `fitcheck-`).
 
+### Deploy
+
+`.github/workflows/deploy-pages.yml` builds the app and publishes it to GitHub Pages on every push to `main`. The build uses relative paths, so it works at any repo name. To turn it on (repo admin, one time):
+
+1. Make the repo public (Pages on a private repo needs a paid plan).
+2. **Settings → Pages → Build and deployment → Source: GitHub Actions.**
+3. **Actions → Deploy to GitHub Pages → Run workflow.** The site appears at `https://<owner>.github.io/<repo>/`.
+
 ## Project Structure
 
 ```
