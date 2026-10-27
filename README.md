@@ -1,6 +1,7 @@
 <img src="docs/images/banner.png" alt="FitCheck: More outfits. Same closet. Team: Khushi Nahar, Nishtha Khosla, Bakul Badwal" width="100%">
 
 <p align="center">
+  <a href="https://khushinahar58-coder.github.io/Fitcheck-/"><b>▶ Try the live app</b></a> &nbsp;·&nbsp;
   <a href="docs/SPEC.md"><b>Product spec</b></a> &nbsp;·&nbsp;
   <a href="docs/IDEAS-BACKLOG.md">Ideas backlog</a> &nbsp;·&nbsp;
   <a href="#try-it-in-30-seconds">Try it</a> &nbsp;·&nbsp;
@@ -135,14 +136,12 @@ npm run dev
 To reset the sample wardrobe, clear the site's `localStorage` (keys starting with `fitcheck-`).
 
 <details>
-<summary><b>Deploy to GitHub Pages</b> (repo admin, one time; not enabled yet)</summary>
+<summary><b>Deploy</b> (automatic on every push to <code>main</code>)</summary>
 <br>
 
-`.github/workflows/deploy-pages.yml` builds the app and publishes it to GitHub Pages on every push to `main`. The build uses relative paths, so it works at any repo name. To turn it on:
+The live app is at **https://khushinahar58-coder.github.io/Fitcheck-/**. `.github/workflows/deploy-pages.yml` typechecks, builds and publishes it to GitHub Pages on every push to `main`; **Actions → Deploy to GitHub Pages → Run workflow** redeploys on demand. The build uses relative paths, so it keeps working if the repo is renamed (the URL follows the new name).
 
-1. Make the repo public (Pages on a private repo needs a paid plan).
-2. **Settings → Pages → Build and deployment → Source: GitHub Actions.**
-3. **Actions → Deploy to GitHub Pages → Run workflow.** The site appears at `https://<owner>.github.io/<repo>/`.
+The live app runs on the built-in sample wardrobe and saves to your browser only; nothing you add leaves your device.
 
 </details>
 
