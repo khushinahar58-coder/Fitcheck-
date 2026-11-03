@@ -162,7 +162,7 @@ docs/
 
 ## Known issues
 
-- **Photo storage:** uploaded photos are saved as base64 in `localStorage`, which caps out around 5 MB. A handful of phone photos will fill it and saving will stop working.
+- **Photo storage:** photos are shrunk to 1200 px before they're saved, so the browser's ~5 MB of `localStorage` holds about 20 phone photos. After that, the Add screen says the closet is full instead of saving. Real image storage is P0 in the [spec](docs/SPEC.md).
 - **Weather units:** temperatures are shown without a unit and read as Celsius.
 - **Lint:** four unused imports from the Bolt export.
 
