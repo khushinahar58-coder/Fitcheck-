@@ -14,7 +14,7 @@ interface Props {
 
 export default function ProfileScreen({ items, savedOutfits, calendarEntries, onNavigate }: Props) {
   const rarelyWorn = getRarelyWornItems(items, 30);
-  const freshItems = items.filter((i) => i.lastWornDaysAgo < 14);
+  const freshItems = items.filter((i) => i.lastWornDaysAgo >= 0 && i.lastWornDaysAgo < 14);
   const wornCount = calendarEntries.filter((e) => e.worn).length;
 
   const categoryCounts = CATEGORIES.filter((c) => c !== 'All').map((cat) => ({

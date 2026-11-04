@@ -118,8 +118,9 @@ function App() {
               items={store.items}
               onRemoveEntry={store.removeCalendarEntry}
               onMarkWorn={(entryId, itemIds) => {
+                const entry = store.calendarEntries.find((e) => e.id === entryId);
                 store.markCalendarEntryWorn(entryId);
-                store.markItemsWorn(itemIds);
+                store.markItemsWorn(itemIds, entry?.date);
               }}
               onNavigate={navigate}
             />

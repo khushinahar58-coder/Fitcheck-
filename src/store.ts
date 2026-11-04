@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import type { ClothingItem, SavedOutfit, CalendarEntry } from './types';
 import { CLOTHING_ITEMS } from './data';
 
@@ -16,13 +16,45 @@ function loadFromStorage<T>(key: string, fallback: T): T {
   }
 }
 
+function toISODate(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+// The user's local date. toISOString() is UTC, which is already tomorrow on a US evening.
 export function todayISO(): string {
-  return new Date().toISOString().split('T')[0];
+  return toISODate(new Date());
+}
+
+function daysBetween(fromISO: string, toISO: string): number {
+  const ms = new Date(toISO + 'T00:00:00').getTime() - new Date(fromISO + 'T00:00:00').getTime();
+  // Round because a day is 23 or 25 hours when the clocks change.
+  return Math.round(ms / 86_400_000);
+}
+
+// Starter pieces (and data saved before wear dates were kept) only have a day count.
+// Turn it into a real date once, so those pieces age like everything else.
+function withWearDates(items: ClothingItem[]): ClothingItem[] {
+  const today = new Date(todayISO() + 'T00:00:00');
+  return items.map((item) => {
+    if (item.wearDates?.length || item.lastWornDaysAgo < 0) return item;
+    const worn = new Date(today);
+    worn.setDate(worn.getDate() - item.lastWornDaysAgo);
+    return { ...item, wearDates: [toISODate(worn)] };
+  });
+}
+
+function daysSinceLastWorn(item: ClothingItem, today: string): number {
+  if (!item.wearDates?.length) return -1;
+  // ISO dates sort as text. Older data can hold tomorrow's date, so stop at 0.
+  const latest = item.wearDates.reduce((a, b) => (b > a ? b : a));
+  return Math.max(0, daysBetween(latest, today));
 }
 
 export function useWardrobeStore() {
-  const [items, setItems] = useState<ClothingItem[]>(() =>
-    loadFromStorage(STORAGE_KEY, CLOTHING_ITEMS)
+  const [storedItems, setItems] = useState<ClothingItem[]>(() =>
+    withWearDates(loadFromStorage(STORAGE_KEY, CLOTHING_ITEMS))
   );
   const [savedOutfits, setSavedOutfits] = useState<SavedOutfit[]>(() =>
     loadFromStorage(SAVED_KEY, [])
@@ -32,8 +64,14 @@ export function useWardrobeStore() {
   );
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  }, [items]);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems));
+  }, [storedItems]);
+
+  const today = todayISO();
+  const items = useMemo(
+    () => storedItems.map((item) => ({ ...item, lastWornDaysAgo: daysSinceLastWorn(item, today) })),
+    [storedItems, today]
+  );
 
   useEffect(() => {
     localStorage.setItem(SAVED_KEY, JSON.stringify(savedOutfits));
@@ -78,17 +116,15 @@ export function useWardrobeStore() {
   }, []);
 
   const markItemsWorn = useCallback((itemIds: string[], dateISO?: string) => {
-    const wearDate = dateISO ?? todayISO();
+    const today = todayISO();
+    // Wearing a look planned for a future date means it was worn today.
+    const wearDate = dateISO && dateISO < today ? dateISO : today;
     setItems((prev) =>
       prev.map((item) => {
         if (!itemIds.includes(item.id)) return item;
         const wearDates = item.wearDates ?? [];
         if (wearDates.includes(wearDate)) return item;
-        return {
-          ...item,
-          lastWornDaysAgo: 0,
-          wearDates: [...wearDates, wearDate],
-        };
+        return { ...item, wearDates: [...wearDates, wearDate] };
       })
     );
   }, []);
@@ -137,6 +173,7 @@ export function getRarelyWornItems(items: ClothingItem[], threshold = 30): Cloth
 }
 
 export function formatLastWorn(daysAgo: number): string {
+  if (daysAgo < 0) return 'Not worn yet';
   if (daysAgo === 0) return 'Worn today';
   if (daysAgo === 1) return 'Worn yesterday';
   if (daysAgo < 7) return `Worn ${daysAgo} days ago`;
