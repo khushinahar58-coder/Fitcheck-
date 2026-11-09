@@ -110,6 +110,7 @@ function App() {
               onViewOutfit={handleViewSaved}
               viewingId={viewingSavedId}
               onNavigate={handleNavigateFromSaved}
+              onSaveOutfit={store.saveOutfit}
             />
           )}
           {screen === 'calendar' && (

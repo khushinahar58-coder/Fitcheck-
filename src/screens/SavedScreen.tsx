@@ -8,6 +8,7 @@ import {
   Clock,
   CalendarDays,
   Check,
+  Pencil,
 } from 'lucide-react';
 import type { ClothingItem, SavedOutfit, CalendarEntry } from '../types';
 import { getItemById, todayISO } from '../store';
@@ -23,7 +24,10 @@ interface Props {
   onViewOutfit: (id: string) => void;
   viewingId: string | null;
   onNavigate: (s: Screen) => void;
+  onSaveOutfit: (outfit: SavedOutfit) => void;
 }
+
+const MAX_NAME_LENGTH = 40;
 
 export default function SavedScreen({
   savedOutfits,
@@ -34,10 +38,44 @@ export default function SavedScreen({
   onViewOutfit,
   viewingId,
   onNavigate,
+  onSaveOutfit,
 }: Props) {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [draftName, setDraftName] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [renameFor, setRenameFor] = useState(viewingId);
+
+  // An unsaved rename belongs to one look. Drop it whenever a different look (or the list) is
+  // shown, whichever path got us there (X, Remove, the Saved tab), so it can't rename another look.
+  if (renameFor !== viewingId) {
+    setRenameFor(viewingId);
+    setDraftName(null);
+    setNameError(null);
+  }
 
   const viewingOutfit = viewingId ? savedOutfits.find((o) => o.id === viewingId) : null;
+
+  const startRename = (current: string) => {
+    setDraftName(current);
+    setNameError(null);
+  };
+
+  const cancelRename = () => {
+    setDraftName(null);
+    setNameError(null);
+  };
+
+  const commitRename = (outfit: SavedOutfit) => {
+    const name = (draftName ?? '').trim();
+    if (!name) {
+      setNameError('Give this look a name before saving.');
+      return;
+    }
+    if (name !== outfit.name) {
+      onSaveOutfit({ ...outfit, name });
+    }
+    cancelRename();
+  };
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -67,17 +105,79 @@ export default function SavedScreen({
         <div className="px-6 pt-14 pb-4">
           <div className="flex items-center gap-3 mb-4">
             <button
-              onClick={() => onViewOutfit('')}
+              onClick={() => {
+                cancelRename();
+                onViewOutfit('');
+              }}
+              aria-label="Close"
               className="w-9 h-9 rounded-full bg-cream-200 flex items-center justify-center hover:bg-cream-300 transition-colors"
             >
               <X size={18} className="text-ink-700" />
             </button>
             <span className="text-sm text-ink-400">Saved Look</span>
           </div>
-          <div className="flex items-center gap-2">
-            <OccasionIcon size={20} className="text-ink-500" />
-            <h1 className="text-2xl font-serif font-medium text-ink-900">{viewingOutfit.name}</h1>
-          </div>
+          {draftName === null ? (
+            <div className="flex items-center gap-2">
+              <OccasionIcon size={20} className="text-ink-500 flex-shrink-0" />
+              <h1 className="text-2xl font-serif font-medium text-ink-900 min-w-0 break-words">
+                {viewingOutfit.name}
+              </h1>
+              <button
+                onClick={() => startRename(viewingOutfit.name)}
+                aria-label="Rename look"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-ink-300 hover:text-ink-700 hover:bg-cream-200 transition-colors flex-shrink-0"
+              >
+                <Pencil size={15} />
+              </button>
+            </div>
+          ) : (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                commitRename(viewingOutfit);
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <input
+                  autoFocus
+                  value={draftName}
+                  maxLength={MAX_NAME_LENGTH}
+                  onChange={(e) => {
+                    setDraftName(e.target.value);
+                    if (nameError) setNameError(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') cancelRename();
+                  }}
+                  aria-label="Look name"
+                  aria-invalid={nameError ? true : undefined}
+                  className={`flex-1 min-w-0 px-3 py-2 rounded-xl bg-white border text-lg font-serif text-ink-900 focus:outline-none focus:ring-2 focus:ring-ink-900/10 ${
+                    nameError ? 'border-error-400' : 'border-cream-300'
+                  }`}
+                />
+                <button
+                  type="submit"
+                  aria-label="Save name"
+                  className="w-9 h-9 rounded-full bg-ink-900 text-cream-50 flex items-center justify-center hover:bg-ink-800 transition-colors flex-shrink-0"
+                >
+                  <Check size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={cancelRename}
+                  aria-label="Cancel rename"
+                  className="w-9 h-9 rounded-full bg-cream-200 text-ink-600 flex items-center justify-center hover:bg-cream-300 transition-colors flex-shrink-0"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              {nameError && (
+                <p role="alert" className="text-xs text-error-500 mt-1.5">
+                  {nameError}
+                </p>
+              )}
+            </form>
+          )}
           <p className="text-sm text-ink-400 mt-1 flex items-center gap-1.5">
             <Calendar size={14} />
             Saved {formatDate(viewingOutfit.savedAt)} · {viewingOutfit.occasionLabel}
@@ -166,6 +266,7 @@ export default function SavedScreen({
 
           <button
             onClick={() => {
+              cancelRename();
               onRemove(viewingOutfit.id);
               onViewOutfit('');
             }}

@@ -91,7 +91,12 @@ export function useWardrobeStore() {
   }, []);
 
   const saveOutfit = useCallback((outfit: SavedOutfit) => {
-    setSavedOutfits((prev) => [outfit, ...prev.filter((o) => o.id !== outfit.id)]);
+    // A look that is already saved (e.g. renamed) keeps its place; a new one goes on top.
+    setSavedOutfits((prev) =>
+      prev.some((o) => o.id === outfit.id)
+        ? prev.map((o) => (o.id === outfit.id ? outfit : o))
+        : [outfit, ...prev]
+    );
   }, []);
 
   const removeSavedOutfit = useCallback((id: string) => {
