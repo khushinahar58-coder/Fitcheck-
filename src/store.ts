@@ -48,6 +48,10 @@ export function useWardrobeStore() {
     setItems((prev) => [...prev, { ...item, id }]);
   }, []);
 
+  const updateItem = useCallback((id: string, changes: Partial<Omit<ClothingItem, 'id'>>) => {
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...changes } : i)));
+  }, []);
+
   const removeItem = useCallback((id: string) => {
     setItems((prev) => prev.filter((i) => i.id !== id));
   }, []);
@@ -109,6 +113,7 @@ export function useWardrobeStore() {
     savedOutfits,
     calendarEntries,
     addItem,
+    updateItem,
     removeItem,
     saveOutfit,
     removeSavedOutfit,

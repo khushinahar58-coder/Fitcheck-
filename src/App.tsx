@@ -90,6 +90,7 @@ function App() {
           {screen === 'wardrobe' && (
             <WardrobeScreen
               items={store.items}
+              onUpdateItem={store.updateItem}
               onRemoveItem={store.removeItem}
             />
           )}

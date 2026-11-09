@@ -1,22 +1,59 @@
 import { useState, useMemo } from 'react';
-import { Search, X, Clock, Trash2 } from 'lucide-react';
-import type { ClothingItem } from '../types';
+import { Search, X, Clock, Trash2, Pencil } from 'lucide-react';
+import type { Category, ClothingItem } from '../types';
 import { CATEGORIES } from '../data';
 import { getItemsByCategory, formatLastWorn, getWornUrgency } from '../store';
 
 interface Props {
   items: ClothingItem[];
+  onUpdateItem: (id: string, changes: Partial<Omit<ClothingItem, 'id'>>) => void;
   onRemoveItem: (id: string) => void;
 }
+
+type EditDraft = Pick<ClothingItem, 'name' | 'color' | 'brand' | 'category'>;
+
+const EDITABLE_CATEGORIES = CATEGORIES.filter((c): c is Category => c !== 'All');
 
 // Pinterest-style masonry columns
 const COLUMN_COUNT = 2;
 
-export default function WardrobeScreen({ items, onRemoveItem }: Props) {
+export default function WardrobeScreen({ items, onUpdateItem, onRemoveItem }: Props) {
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [notWornRecently, setNotWornRecently] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<ClothingItem | null>(null);
+  const [draft, setDraft] = useState<EditDraft | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
+
+  const closeSheet = () => {
+    setSelectedItem(null);
+    setDraft(null);
+    setEditError(null);
+  };
+
+  const startEditing = (item: ClothingItem) => {
+    setDraft({ name: item.name, color: item.color, brand: item.brand, category: item.category });
+    setEditError(null);
+  };
+
+  const saveEdits = () => {
+    if (!selectedItem || !draft) return;
+    const name = draft.name.trim();
+    if (!name) {
+      setEditError('Give this piece a name before saving.');
+      return;
+    }
+    const changes: EditDraft = {
+      name,
+      color: draft.color.trim(),
+      brand: draft.brand.trim(),
+      category: draft.category,
+    };
+    onUpdateItem(selectedItem.id, changes);
+    setSelectedItem({ ...selectedItem, ...changes });
+    setDraft(null);
+    setEditError(null);
+  };
 
   const filteredItems = useMemo(() => {
     let result = getItemsByCategory(items, activeCategory);
@@ -190,8 +227,8 @@ export default function WardrobeScreen({ items, onRemoveItem }: Props) {
       {/* Item detail bottom sheet */}
       {selectedItem && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center"
-          onClick={() => setSelectedItem(null)}
+          className="fixed inset-0 z-[60] flex items-end justify-center"
+          onClick={closeSheet}
         >
           <div className="absolute inset-0 bg-ink-900/40 backdrop-blur-sm animate-fade-in" />
           <div
@@ -205,7 +242,7 @@ export default function WardrobeScreen({ items, onRemoveItem }: Props) {
                 className="w-full aspect-[4/5] object-cover"
               />
               <button
-                onClick={() => setSelectedItem(null)}
+                onClick={closeSheet}
                 className="absolute top-4 right-4 w-9 h-9 rounded-full bg-cream-50/90 backdrop-blur-sm flex items-center justify-center"
               >
                 <X size={18} className="text-ink-700" />
@@ -221,6 +258,78 @@ export default function WardrobeScreen({ items, onRemoveItem }: Props) {
                 )}
               </div>
             </div>
+            {draft ? (
+              <div className="p-6">
+                <h2 className="text-xl font-serif text-ink-900">Edit piece</h2>
+                <div className="space-y-3 mt-4">
+                  <label className="block">
+                    <span className="text-[10px] uppercase tracking-wider text-ink-300 font-medium">Name</span>
+                    <input
+                      type="text"
+                      value={draft.name}
+                      onChange={(e) => {
+                        setDraft({ ...draft, name: e.target.value });
+                        setEditError(null);
+                      }}
+                      className={`mt-1 w-full px-4 py-3 bg-cream-200/70 rounded-2xl text-sm text-ink-800 border outline-none transition-all focus:bg-cream-50 ${
+                        editError ? 'border-error-400' : 'border-transparent focus:border-ink-200'
+                      }`}
+                    />
+                    {editError && <p className="text-xs text-error-500 mt-1">{editError}</p>}
+                  </label>
+                  <label className="block">
+                    <span className="text-[10px] uppercase tracking-wider text-ink-300 font-medium">Color</span>
+                    <input
+                      type="text"
+                      value={draft.color}
+                      onChange={(e) => setDraft({ ...draft, color: e.target.value })}
+                      className="mt-1 w-full px-4 py-3 bg-cream-200/70 rounded-2xl text-sm text-ink-800 border border-transparent focus:border-ink-200 focus:bg-cream-50 outline-none transition-all"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-[10px] uppercase tracking-wider text-ink-300 font-medium">Brand</span>
+                    <input
+                      type="text"
+                      value={draft.brand}
+                      onChange={(e) => setDraft({ ...draft, brand: e.target.value })}
+                      className="mt-1 w-full px-4 py-3 bg-cream-200/70 rounded-2xl text-sm text-ink-800 border border-transparent focus:border-ink-200 focus:bg-cream-50 outline-none transition-all"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-[10px] uppercase tracking-wider text-ink-300 font-medium">Category</span>
+                    <select
+                      value={draft.category}
+                      onChange={(e) => setDraft({ ...draft, category: e.target.value as Category })}
+                      className="mt-1 w-full px-4 py-3 bg-cream-200/70 rounded-2xl text-sm text-ink-800 border border-transparent focus:border-ink-200 focus:bg-cream-50 outline-none transition-all"
+                    >
+                      {EDITABLE_CATEGORIES.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={() => {
+                      setDraft(null);
+                      setEditError(null);
+                    }}
+                    className="flex-1 py-3 rounded-2xl border border-cream-300 text-ink-500 text-sm font-medium hover:bg-cream-200/60 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={saveEdits}
+                    className="flex-1 py-3 rounded-2xl bg-ink-900 text-cream-50 text-sm font-medium hover:bg-ink-800 transition-colors"
+                  >
+                    Save changes
+                  </button>
+                </div>
+              </div>
+            ) : (
             <div className="p-6">
               <h2 className="text-xl font-serif text-ink-900">{selectedItem.name}</h2>
               <p className="text-sm text-ink-400 mt-1">{selectedItem.brand}</p>
@@ -259,17 +368,25 @@ export default function WardrobeScreen({ items, onRemoveItem }: Props) {
 
               <div className="flex gap-3 mt-6">
                 <button
+                  onClick={() => startEditing(selectedItem)}
+                  className="flex-1 py-3 rounded-2xl border border-cream-300 text-ink-700 text-sm font-medium hover:bg-cream-200/60 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Pencil size={16} />
+                  Edit details
+                </button>
+                <button
                   onClick={() => {
                     onRemoveItem(selectedItem.id);
-                    setSelectedItem(null);
+                    closeSheet();
                   }}
                   className="flex-1 py-3 rounded-2xl border border-error-400/30 text-error-500 text-sm font-medium hover:bg-error-400/5 transition-colors flex items-center justify-center gap-2"
                 >
                   <Trash2 size={16} />
-                  Remove from wardrobe
+                  Remove
                 </button>
               </div>
             </div>
+            )}
           </div>
         </div>
       )}
