@@ -43,6 +43,15 @@ export default function SavedScreen({
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [draftName, setDraftName] = useState<string | null>(null);
   const [nameError, setNameError] = useState<string | null>(null);
+  const [renameFor, setRenameFor] = useState(viewingId);
+
+  // An unsaved rename belongs to one look. Drop it whenever a different look (or the list) is
+  // shown, whichever path got us there (X, Remove, the Saved tab), so it can't rename another look.
+  if (renameFor !== viewingId) {
+    setRenameFor(viewingId);
+    setDraftName(null);
+    setNameError(null);
+  }
 
   const viewingOutfit = viewingId ? savedOutfits.find((o) => o.id === viewingId) : null;
 
@@ -257,6 +266,7 @@ export default function SavedScreen({
 
           <button
             onClick={() => {
+              cancelRename();
               onRemove(viewingOutfit.id);
               onViewOutfit('');
             }}
