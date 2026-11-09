@@ -45,7 +45,7 @@ but never imported. State lives in `localStorage` (`fitcheck-wardrobe`, `fitchec
 
 | Type | Key fields |
 |---|---|
-| `ClothingItem` | name, category (Tops, Bottoms, Dresses, Outerwear, Shoes, Accessories), image, color, brand, `lastWornDaysAgo`, `wearDates[]` |
+| `ClothingItem` | name, category (Tops, Bottoms, Dresses, Outerwear, Shoes, Accessories), image, color, brand, `wearDates[]`, `lastWornDaysAgo` (worked out from `wearDates`) |
 | `Outfit` | occasion, name, description, `slots[]` (role + item) |
 | `SavedOutfit` | outfit snapshot + the weather at save time |
 | `CalendarEntry` | date, outfit snapshot, `worn` flag |

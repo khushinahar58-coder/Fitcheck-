@@ -15,9 +15,9 @@ export interface ClothingItem {
   image: string;
   color: string;
   brand: string;
-  lastWornDaysAgo: number; // 0 = today, -1 = never
+  lastWornDaysAgo: number; // Worked out from wearDates when the app reads items. 0 = today, -1 = never
   tags: string[];
-  wearDates?: string[]; // ISO date strings when item was marked as worn
+  wearDates?: string[]; // ISO date strings when item was marked as worn. The source of truth
 }
 
 export interface Occasion {
