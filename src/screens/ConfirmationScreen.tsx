@@ -232,20 +232,32 @@ export default function ConfirmationScreen({
             <p className="text-sm text-ink-400 text-center">
               Does this outfit work for the weather?
             </p>
-            <button
-              onClick={handleKeepOutfit}
-              className="w-full py-4 rounded-2xl text-sm font-medium transition-all flex items-center justify-center gap-2 bg-ink-900 text-cream-50 hover:bg-ink-800"
-            >
-              <CalendarDays size={18} />
-              Keep outfit — add to today
-            </button>
-            <button
-              onClick={handleSaveOutfit}
-              className="w-full py-4 rounded-2xl text-sm font-medium transition-all flex items-center justify-center gap-2 bg-clay-500 text-cream-50 hover:bg-clay-600"
-            >
-              <Bookmark size={18} fill="currentColor" />
-              Save outfit
-            </button>
+            <div>
+              <button
+                onClick={handleKeepOutfit}
+                aria-describedby="wear-today-hint"
+                className="w-full py-4 rounded-2xl text-sm font-medium transition-all flex items-center justify-center gap-2 bg-ink-900 text-cream-50 hover:bg-ink-800"
+              >
+                <CalendarDays size={18} />
+                Wearing this today
+              </button>
+              <p id="wear-today-hint" className="text-xs text-ink-400 text-center mt-1.5">
+                Puts it on today's calendar. Mark it worn there once you've worn it.
+              </p>
+            </div>
+            <div>
+              <button
+                onClick={handleSaveOutfit}
+                aria-describedby="save-later-hint"
+                className="w-full py-4 rounded-2xl text-sm font-medium transition-all flex items-center justify-center gap-2 bg-clay-500 text-cream-50 hover:bg-clay-600"
+              >
+                <Bookmark size={18} fill="currentColor" />
+                Save for later
+              </button>
+              <p id="save-later-hint" className="text-xs text-ink-400 text-center mt-1.5">
+                Keeps it in Saved Looks. You can pick a day for it next.
+              </p>
+            </div>
             <button
               onClick={onBack}
               className="w-full py-4 rounded-2xl border border-cream-300 text-ink-600 text-sm font-medium hover:bg-cream-200/60 transition-colors flex items-center justify-center gap-2"
@@ -263,7 +275,7 @@ export default function ConfirmationScreen({
               <div>
                 <p className="text-sm font-medium text-sage-500">Added to your calendar</p>
                 <p className="text-xs text-sage-500/70 mt-0.5">
-                  Outfit planned for {formatLongDate(today)}
+                  Planned for {formatLongDate(today)}. Mark it worn on the calendar once you've worn it.
                 </p>
               </div>
             </div>
@@ -272,7 +284,7 @@ export default function ConfirmationScreen({
               className="w-full py-4 bg-clay-500 text-cream-50 rounded-2xl text-sm font-medium hover:bg-clay-600 transition-colors flex items-center justify-center gap-2"
             >
               <Bookmark size={18} fill="currentColor" />
-              Also save outfit
+              Also save for later
             </button>
             <button
               onClick={() => onNavigate('calendar')}
@@ -288,7 +300,7 @@ export default function ConfirmationScreen({
             <div className="p-4 bg-clay-50 border border-clay-200 rounded-2xl flex items-center gap-3">
               <Check size={20} className="text-clay-500 flex-shrink-0" />
               <div>
-                <p className="text-sm font-medium text-clay-600">Outfit saved</p>
+                <p className="text-sm font-medium text-clay-600">Saved for later</p>
                 <p className="text-xs text-clay-600/70 mt-0.5">
                   Find it anytime in your Saved Looks
                 </p>
@@ -406,7 +418,7 @@ export default function ConfirmationScreen({
             <div className="w-20 h-20 rounded-full bg-clay-500 flex items-center justify-center mx-auto mb-4">
               <Bookmark size={32} className="text-cream-50" fill="currentColor" />
             </div>
-            <h2 className="text-xl font-serif text-ink-900">Outfit saved!</h2>
+            <h2 className="text-xl font-serif text-ink-900">Saved for later!</h2>
             <p className="text-sm text-ink-400 mt-1">Find it anytime in your Saved Looks</p>
           </div>
         </div>
