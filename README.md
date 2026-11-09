@@ -1,4 +1,4 @@
-<img src="docs/images/banner.png" alt="FitCheck: More outfits. Same closet. Team: Khushi Nahar, Nishtha Khosla, Bakul Badwal" width="100%">
+<img src="docs/images/banner.png" alt="FitCheck: More outfits. Same closet. Team: Khushi Nahar, Nishtha Khosla, Bakul Badwal, Mantavya Gupta" width="100%">
 
 <p align="center">
   <a href="https://khushinahar58-coder.github.io/Fitcheck-/"><b>▶ Try the live app</b></a> &nbsp;·&nbsp;
@@ -168,7 +168,7 @@ docs/
 
 ## Credits
 
-**Team:** Khushi Nahar · Nishtha Khosla · Bakul Badwal
+**Team:** Khushi Nahar · Nishtha Khosla · Bakul Badwal · Mantavya Gupta
 
 Original concept and Bolt prototype by Khushi Nahar.
 
