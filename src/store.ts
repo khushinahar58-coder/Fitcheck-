@@ -178,7 +178,7 @@ export function getItemsByCategory(items: ClothingItem[], category: string): Clo
 
 export function getRarelyWornItems(items: ClothingItem[], threshold = 30): ClothingItem[] {
   return items
-    .filter((i) => i.lastWornDaysAgo >= threshold)
+    .filter((i) => i.lastWornDaysAgo > threshold)
     .sort((a, b) => b.lastWornDaysAgo - a.lastWornDaysAgo);
 }
 
