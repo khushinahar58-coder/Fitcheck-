@@ -312,7 +312,7 @@ export const CLOTHING_ITEMS: ClothingItem[] = [
     name: 'Claude Code Hat',
     category: 'Accessories',
     image: claudeCodeHat,
-    color: 'Olive corduroy',
+    color: 'Oxford Navy corduroy',
     brand: 'Unseriousgarment',
     lastWornDaysAgo: -1,
     tags: ['hat', 'casual'],
