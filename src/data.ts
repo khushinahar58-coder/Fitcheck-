@@ -1,4 +1,6 @@
 import type { ClothingItem, Category, Occasion, Outfit, WeatherInfo } from './types';
+import claudeCodeHat from './assets/wardrobe/claude-code-hat.jpg';
+import openaiBlossomHat from './assets/wardrobe/openai-blossom-hat.png';
 
 export const CATEGORIES: Array<'All' | ClothingItem['category']> = [
   'All',
@@ -304,6 +306,26 @@ export const CLOTHING_ITEMS: ClothingItem[] = [
     brand: 'Hermès',
     lastWornDaysAgo: 90,
     tags: ['accessory', 'rarely-worn'],
+  },
+  {
+    id: 'a5',
+    name: 'Claude Code Hat',
+    category: 'Accessories',
+    image: claudeCodeHat,
+    color: 'Olive corduroy',
+    brand: 'Unseriousgarment',
+    lastWornDaysAgo: -1,
+    tags: ['hat', 'casual'],
+  },
+  {
+    id: 'a6',
+    name: 'Blossom Hat',
+    category: 'Accessories',
+    image: openaiBlossomHat,
+    color: 'Black corduroy',
+    brand: 'OpenAI Supply Co.',
+    lastWornDaysAgo: -1,
+    tags: ['hat', 'casual'],
   },
 ];
 
