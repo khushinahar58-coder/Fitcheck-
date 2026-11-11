@@ -72,7 +72,7 @@ but never imported. State lives in `localStorage` (`fitcheck-wardrobe`, `fitchec
 
 **Known issues**
 
-- Photos are stored as base64 in `localStorage` (~5 MB cap).
+- Photos are shrunk to 1200 px and stored as base64 in `localStorage` (~5 MB cap, about 20 phone photos).
 - No temperature unit on the weather card.
 - 4 lint errors (unused imports). Typecheck and build pass.
 

@@ -1,7 +1,8 @@
-import { useState, useRef } from 'react';
-import { Camera, ImagePlus, Check, X, Sparkles, ArrowRight, Wand2, ShoppingBag } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Camera, ImagePlus, Check, X, Sparkles, ArrowRight, Wand2, ShoppingBag, AlertCircle } from 'lucide-react';
 import type { ClothingItem, Category } from '../types';
 import { CATEGORIES, SAMPLE_GALLERY } from '../data';
+import { shrinkPhoto, hasRoomFor, PhotoError } from '../lib/photos';
 import type { Screen } from '../App';
 
 interface Props {
@@ -42,17 +43,31 @@ export default function AddScreen({ onAddItem, onNavigate, currentCount }: Props
   const [brand, setBrand] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [mode, setMode] = useState<'upload' | 'gallery'>('upload');
+  const [preparing, setPreparing] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const alertRef = useRef<HTMLDivElement>(null);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Bring the message into view; otherwise it can sit under the bottom navigation.
+  useEffect(() => {
+    if (photoError) alertRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [photoError]);
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    // Clear the input so picking the same file again still fires onChange.
+    e.target.value = '';
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      setSelectedImage(reader.result as string);
+    setPhotoError(null);
+    setPreparing(true);
+    try {
+      setSelectedImage(await shrinkPhoto(file));
       setMode('upload');
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      setPhotoError(err instanceof PhotoError ? err.message : "We couldn't read that photo. Try another one.");
+    } finally {
+      setPreparing(false);
+    }
   };
 
   const handleSampleSelect = (image: string, index: number) => {
@@ -64,6 +79,12 @@ export default function AddScreen({ onAddItem, onNavigate, currentCount }: Props
 
   const handleAdd = () => {
     if (!selectedImage) return;
+    if (!hasRoomFor(selectedImage)) {
+      setPhotoError(
+        "Your closet is full on this device, so this piece wasn't saved. Remove a few pieces you've added, then try again."
+      );
+      return;
+    }
     onAddItem({
       name: itemName || 'New Piece',
       category: (category || 'Tops') as Category,
@@ -87,12 +108,23 @@ export default function AddScreen({ onAddItem, onNavigate, currentCount }: Props
   };
 
   const handleReset = () => {
+    setPhotoError(null);
     setSelectedImage(null);
     setItemName('');
     setCategory('');
     setColor('');
     setBrand('');
   };
+
+  const photoAlert = photoError && (
+    <div ref={alertRef} role="alert" className="p-4 bg-clay-100/60 rounded-2xl border border-clay-200 flex items-start gap-3">
+      <AlertCircle size={18} className="text-error-500 flex-shrink-0 mt-0.5" />
+      <p className="flex-1 text-sm text-ink-700">{photoError}</p>
+      <button onClick={() => setPhotoError(null)} aria-label="Dismiss" className="text-ink-300 hover:text-ink-600">
+        <X size={16} />
+      </button>
+    </div>
+  );
 
   return (
     <div className="animate-fade-in">
@@ -117,19 +149,25 @@ export default function AddScreen({ onAddItem, onNavigate, currentCount }: Props
         </div>
       )}
 
+      {/* Photo problem (before a photo is picked) */}
+      {!selectedImage && photoAlert && <div className="mx-6 mb-4">{photoAlert}</div>}
+
       {/* Upload zone */}
       {!selectedImage && (
         <div className="px-6 space-y-5">
           <button
             onClick={() => fileInputRef.current?.click()}
+            disabled={preparing}
             className="w-full aspect-[4/3] rounded-3xl border-2 border-dashed border-cream-400 bg-cream-200/40 flex flex-col items-center justify-center gap-3 hover:border-ink-300 hover:bg-cream-200/60 transition-all duration-300 group"
           >
             <div className="w-16 h-16 rounded-full bg-cream-300 flex items-center justify-center group-hover:scale-110 transition-transform">
               <Camera size={28} className="text-ink-400" />
             </div>
             <div className="text-center">
-              <p className="text-sm font-medium text-ink-600">Take or upload a photo</p>
-              <p className="text-xs text-ink-300 mt-0.5">JPG, PNG — anything works</p>
+              <p className="text-sm font-medium text-ink-600">
+                {preparing ? 'Preparing your photo…' : 'Take or upload a photo'}
+              </p>
+              <p className="text-xs text-ink-300 mt-0.5">JPG or PNG, straight from your phone</p>
             </div>
           </button>
           <input
@@ -297,6 +335,9 @@ export default function AddScreen({ onAddItem, onNavigate, currentCount }: Props
                 />
               </div>
             </div>
+
+            {/* Shown here so it's in view when the add fails */}
+            {photoAlert}
 
             <button
               onClick={handleAdd}
