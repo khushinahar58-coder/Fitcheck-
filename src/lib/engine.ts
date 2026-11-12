@@ -159,6 +159,10 @@ function colorScore(pieces: Piece[]): number {
 
   const families = pieces.map((p) => p.a.color.family);
   if (families.includes('navy') && families.includes('black')) score -= 0.6;
+  // The same strong color top and bottom (olive jacket, olive trousers) reads as a uniform.
+  const garments = pieces.filter((p) => p.item.category !== 'Shoes' && p.item.category !== 'Accessories');
+  const loud = garments.filter((p) => !p.a.color.neutral && !isDenim(p)).map((p) => p.a.color.family);
+  if (new Set(loud).size < loud.length) score -= 1.8;
   if (pieces.filter(isDenim).length > 1) score -= 1.5;
   return score;
 }
@@ -263,6 +267,9 @@ function pickAccessories(
   const accentFamilies = new Set(main.filter((p) => !p.a.color.neutral && !isDenim(p)).map((p) => p.a.color.family));
   const sunny = !w || (!w.rain && (o.weather?.code ?? 0) <= 2);
 
+  // Hats only reach this list on a day off, and a cap with a scarf is one accessory too many.
+  const hatInPlay = pool.some((p) => p.a.kind === 'hat');
+
   const scored = pool.map((p) => {
     let s = -occasionPenalty(p, profile.lo, profile.hi) - recencyPenalty(p) + rediscoverBonus(p) * 0.6;
     // The same earrings on every suggested look is not much of a suggestion. Bags are the exception.
@@ -284,13 +291,17 @@ function pickAccessories(
       case 'belt':
         s += c.bottom && c.bottom.a.kind !== 'skirt' ? 0.3 : -5;
         break;
-      case 'scarf':
+      case 'scarf': {
+        // A silk scarf is a touch of color. A wool one is for warmth, so it waits for cold days.
+        const silky = /silk|satin/.test(`${p.item.name} ${(p.item.tags ?? []).join(' ')}`.toLowerCase());
         if (c.top?.a.kind === 'turtleneck') s -= 2;
+        if (hatInPlay && w?.chill !== 'freezing') s -= 2;
         if (w?.chill === 'cold' || w?.chill === 'freezing') s += 1;
         else if (w?.chill === 'hot') s -= 2.5;
-        else if (w?.chill === 'cool') s += 0.2;
+        else if (!silky) s -= 2;
         else s -= accentFamilies.size === 0 ? 0.2 : 0.6;
         break;
+      }
       case 'hat':
         s += sunny || w?.chill === 'freezing' ? 0.9 : 0.5;
         break;

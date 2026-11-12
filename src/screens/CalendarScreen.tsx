@@ -7,8 +7,7 @@ import {
   X,
   CalendarDays,
   CheckCircle2,
-  Circle,
-} from 'lucide-react';
+  Circle, Undo2 } from 'lucide-react';
 import type { ClothingItem, CalendarEntry } from '../types';
 import { getItemById, formatLongDate, todayISO } from '../store';
 import { getOccasionIcon } from '../components/icons';
@@ -19,6 +18,7 @@ interface Props {
   items: ClothingItem[];
   onRemoveEntry: (id: string) => void;
   onMarkWorn: (entryId: string, itemIds: string[]) => void;
+  onUnmarkWorn: (entryId: string) => void;
   onNavigate: (s: Screen) => void;
 }
 
@@ -41,6 +41,7 @@ export default function CalendarScreen({
   items,
   onRemoveEntry,
   onMarkWorn,
+  onUnmarkWorn,
   onNavigate,
 }: Props) {
   const today = todayISO();
@@ -99,6 +100,13 @@ export default function CalendarScreen({
     const itemIds = entry.slots.map((s) => s.itemId);
     onMarkWorn(entry.id, itemIds);
     setViewingEntry((prev) => prev ? { ...prev, worn: true, wornAt: Date.now() } : null);
+  };
+
+  // Marked worn by mistake: the look goes back to planned and the wear comes off its pieces.
+  const handleUnmarkWorn = (entry: CalendarEntry) => {
+    if (!entry.worn) return;
+    onUnmarkWorn(entry.id);
+    setViewingEntry((prev) => (prev ? { ...prev, worn: false, wornAt: undefined } : null));
   };
 
   // Detail view for a calendar entry
@@ -173,7 +181,7 @@ export default function CalendarScreen({
               const item = getItemById(items, slot.itemId);
               if (!item) return null;
               return (
-                <div key={slot.role} className="flex items-center gap-3 p-3 bg-white rounded-2xl border border-cream-200/60">
+                <div key={`${slot.role}-${slot.itemId}`} className="flex items-center gap-3 p-3 bg-white rounded-2xl border border-cream-200/60">
                   <div className="w-14 h-16 rounded-lg overflow-hidden bg-cream-200 flex-shrink-0">
                     <img src={item.image} alt={item.name} loading="lazy" className="w-full h-full object-cover" />
                   </div>
@@ -199,6 +207,15 @@ export default function CalendarScreen({
             >
               <Check size={18} />
               Mark as worn
+            </button>
+          )}
+          {entry.worn && (
+            <button
+              onClick={() => handleUnmarkWorn(entry)}
+              className="w-full py-3.5 rounded-2xl border border-cream-300 text-ink-600 text-sm font-medium hover:bg-cream-200/60 transition-colors flex items-center justify-center gap-2"
+            >
+              <Undo2 size={16} />
+              I didn't wear this
             </button>
           )}
           <button
@@ -393,7 +410,7 @@ export default function CalendarScreen({
                         const item = getItemById(items, slot.itemId);
                         if (!item) return null;
                         return (
-                          <div key={slot.role} className="flex-1 overflow-hidden">
+                          <div key={`${slot.role}-${slot.itemId}`} className="flex-1 overflow-hidden">
                             <img src={item.image} alt={item.name} loading="lazy" className="w-full h-full object-cover" />
                           </div>
                         );

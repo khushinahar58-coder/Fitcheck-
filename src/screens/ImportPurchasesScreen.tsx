@@ -6,7 +6,6 @@ import {
   X,
   Sparkles,
   Edit3,
-  ChevronRight,
   Loader2,
   ArrowRight,
   Search,

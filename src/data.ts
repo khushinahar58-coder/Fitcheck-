@@ -375,7 +375,8 @@ export const SAMPLE_GALLERY: string[] = [
   'https://images.pexels.com/photos/9904171/pexels-photo-9904171.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
   'https://images.pexels.com/photos/4872122/pexels-photo-4872122.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
   'https://images.pexels.com/photos/26756784/pexels-photo-26756784.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
-  'https://images.pexels.com/photos/7706645/pexels-photo-7706645.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
+  // The stock photo that used to be here was taken down, so this one is drawn.
+  garmentArt({ name: 'Everyday Crossbody', category: 'Accessories', color: 'Tan', tags: [] }),
   'https://images.pexels.com/photos/39457662/pexels-photo-39457662.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',
 ];
 

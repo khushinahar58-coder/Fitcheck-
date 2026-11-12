@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react';
 import { Search, X, Clock, Trash2, Pencil } from 'lucide-react';
 import type { Category, ClothingItem } from '../types';
 import { CATEGORIES } from '../data';
-import { getItemsByCategory, formatLastWorn, getWornUrgency } from '../store';
+import { getItemsByCategory, formatIdle, getWornUrgency } from '../store';
+import { idleDays } from '../lib/wear';
 
 interface Props {
   items: ClothingItem[];
@@ -58,7 +59,7 @@ export default function WardrobeScreen({ items, onUpdateItem, onRemoveItem }: Pr
   const filteredItems = useMemo(() => {
     let result = getItemsByCategory(items, activeCategory);
     if (notWornRecently) {
-      result = result.filter((i) => i.lastWornDaysAgo >= 30);
+      result = result.filter((i) => idleDays(i) >= 30);
     }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -185,7 +186,7 @@ export default function WardrobeScreen({ items, onUpdateItem, onRemoveItem }: Pr
           {columns.map((col, ci) => (
             <div key={ci} className="flex-1 space-y-3">
               {col.map((item) => {
-                const urgency = getWornUrgency(item.lastWornDaysAgo);
+                const urgency = getWornUrgency(idleDays(item));
                 return (
                   <button
                     key={item.id}
@@ -203,7 +204,7 @@ export default function WardrobeScreen({ items, onUpdateItem, onRemoveItem }: Pr
                       {urgency === 'rarely' && (
                         <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-clay-500/90 backdrop-blur-sm">
                           <span className="text-[10px] font-medium text-cream-50">
-                            {formatLastWorn(item.lastWornDaysAgo)}
+                            {formatIdle(item)}
                           </span>
                         </div>
                       )}
@@ -251,7 +252,7 @@ export default function WardrobeScreen({ items, onUpdateItem, onRemoveItem }: Pr
                 <span className="px-3 py-1 rounded-full bg-cream-50/90 backdrop-blur-sm text-xs font-medium text-ink-700">
                   {selectedItem.category}
                 </span>
-                {getWornUrgency(selectedItem.lastWornDaysAgo) === 'rarely' && (
+                {getWornUrgency(idleDays(selectedItem)) === 'rarely' && (
                   <span className="px-3 py-1 rounded-full bg-clay-500/90 backdrop-blur-sm text-xs font-medium text-cream-50">
                     Rarely worn
                   </span>
@@ -343,12 +344,12 @@ export default function WardrobeScreen({ items, onUpdateItem, onRemoveItem }: Pr
                   <p className="text-[10px] uppercase tracking-wider text-ink-300 font-medium">Last worn</p>
                   <p
                     className={`text-sm mt-1 ${
-                      getWornUrgency(selectedItem.lastWornDaysAgo) === 'rarely'
+                      getWornUrgency(idleDays(selectedItem)) === 'rarely'
                         ? 'text-clay-500'
                         : 'text-ink-800'
                     }`}
                   >
-                    {formatLastWorn(selectedItem.lastWornDaysAgo)}
+                    {formatIdle(selectedItem)}
                   </p>
                 </div>
               </div>

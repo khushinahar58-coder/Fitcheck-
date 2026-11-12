@@ -9,6 +9,12 @@ import {
   Wind,
   Sun,
   Moon,
+  Cloud,
+  CloudFog,
+  CloudDrizzle,
+  CloudRain,
+  CloudSnow,
+  CloudLightning,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -21,10 +27,18 @@ export const OCCASION_ICONS: Record<string, LucideIcon> = {
 };
 
 export const WEATHER_ICONS: Record<string, LucideIcon> = {
+  // Live forecast (see lib/weather.ts)
+  sun: Sun,
   'cloud-sun': CloudSun,
+  cloud: Cloud,
+  'cloud-fog': CloudFog,
+  'cloud-drizzle': CloudDrizzle,
+  'cloud-rain': CloudRain,
+  'cloud-snow': CloudSnow,
+  'cloud-lightning': CloudLightning,
+  // Looks saved before the forecast was live
   'moon-star': MoonStar,
   wind: Wind,
-  sun: Sun,
   moon: Moon,
 };
 

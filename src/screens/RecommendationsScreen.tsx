@@ -1,26 +1,45 @@
 import { useState, useMemo } from 'react';
-import { ArrowLeft, Heart, RefreshCw, Check, Sparkles, ArrowRight, X, Plus, Trash2 } from 'lucide-react';
-import type { ClothingItem, OccasionId, Outfit, OutfitSlot, Category } from '../types';
-import { OUTFITS, OCCASIONS, CATEGORIES } from '../data';
-import { getItemById, getRarelyWornItems, formatLastWorn } from '../store';
-import { getOccasionIcon } from '../components/icons';
-import type { ConfirmationContext } from '../App';
+import { ArrowLeft, Heart, RefreshCw, Check, Sparkles, ArrowRight, X, Plus, Trash2, Shirt, PersonStanding } from 'lucide-react';
+import type { ClothingItem, OccasionId, Outfit, OutfitSlot, Category, CalendarEntry } from '../types';
+import { OCCASIONS, CATEGORIES } from '../data';
+import { getItemById, getRarelyWornItems, formatIdle, todayISO } from '../store';
+import { getOccasionIcon, getWeatherIcon } from '../components/icons';
+import FigureCard from '../components/FigureCard';
+import { closetGap, generateOutfits } from '../lib/engine';
+import { roleFor } from '../lib/attributes';
+import { daysBetween, isRarelyWorn } from '../lib/wear';
+import { useApp } from '../lib/appContext';
+import type { ConfirmationContext, Screen } from '../App';
 
 interface Props {
   occasionId: OccasionId;
   items: ClothingItem[];
+  calendarEntries: CalendarEntry[];
   onBack: () => void;
   onConfirmOutfit: (ctx: ConfirmationContext) => void;
+  onNavigate: (s: Screen) => void;
 }
 
-export default function RecommendationsScreen({ occasionId, items, onBack, onConfirmOutfit }: Props) {
+const FIRST_PAGE = 4;
+
+export default function RecommendationsScreen({ occasionId, items, calendarEntries, onBack, onConfirmOutfit, onNavigate }: Props) {
   const occasion = OCCASIONS.find((o) => o.id === occasionId)!;
   const OccasionIcon = getOccasionIcon(occasion.emoji);
+  const { profile, weatherFor, fmt, fmtShort } = useApp();
+  const today = todayISO();
+  const weather = weatherFor(today);
+  const WeatherIcon = getWeatherIcon(weather?.icon ?? 'cloud-sun');
 
-  const occasionOutfits = useMemo(
-    () => OUTFITS.filter((o) => o.occasionId === occasionId),
-    [occasionId]
-  );
+  // Looks are generated from this closet, for this occasion, today's forecast and recent wear.
+  const allOutfits = useMemo(() => {
+    const recentLooks = calendarEntries
+      .filter((e) => e.worn && daysBetween(e.wornOn ?? e.date, today) <= 7)
+      .map((e) => e.slots.map((s) => s.itemId));
+    return generateOutfits({ items, occasionId, weather, today, formatTemp: fmt, count: 8, recentLooks });
+  }, [items, occasionId, weather, today, fmt, calendarEntries]);
+  const [showAll, setShowAll] = useState(false);
+  const occasionOutfits = showAll ? allOutfits : allOutfits.slice(0, FIRST_PAGE);
+  const [view, setView] = useState<'pieces' | 'figure'>('pieces');
 
   const [selectedOutfitId, setSelectedOutfitId] = useState<string>(
     occasionOutfits[0]?.id ?? ''
@@ -29,7 +48,8 @@ export default function RecommendationsScreen({ occasionId, items, onBack, onCon
   const [addState, setAddState] = useState(false);
   const [likedOutfits, setLikedOutfits] = useState<Set<string>>(new Set());
 
-  const selectedOutfit = occasionOutfits.find((o) => o.id === selectedOutfitId);
+  // The forecast can arrive after the screen opens and change the looks, so fall back to the first.
+  const selectedOutfit = occasionOutfits.find((o) => o.id === selectedOutfitId) ?? occasionOutfits[0];
   const rarelyWorn = useMemo(() => getRarelyWornItems(items, 30), [items]);
 
   // Track modifications: swapOverrides maps role->newItemId, removedRoles is a set of removed roles, addedSlots is extra slots
@@ -53,10 +73,14 @@ export default function RecommendationsScreen({ occasionId, items, onBack, onCon
     }
   };
 
-  const handleAddItem = (item: ClothingItem, role: string) => {
+  const handleAddItem = (item: ClothingItem) => {
     if (selectedOutfit) {
-      const newSlot: OutfitSlot = { role: role || item.category, itemId: item.id };
-      setAddedSlots((prev) => [...prev, newSlot]);
+      // Slot labels must be unique within a look: a second bag becomes "Bag 2".
+      const taken = new Set(getEffectiveSlots(selectedOutfit).map((s) => s.role));
+      const base = roleFor(item);
+      let role = base;
+      for (let n = 2; taken.has(role); n++) role = `${base} ${n}`;
+      setAddedSlots((prev) => [...prev, { role, itemId: item.id }]);
     }
     setAddState(false);
   };
@@ -83,6 +107,16 @@ export default function RecommendationsScreen({ occasionId, items, onBack, onCon
 
   const effectiveSlots = selectedOutfit ? getEffectiveSlots(selectedOutfit) : [];
   const usedItemIds = new Set(effectiveSlots.map((s) => s.itemId));
+  const effectiveItems = effectiveSlots
+    .map((s) => getItemById(items, s.itemId))
+    .filter((i): i is ClothingItem => !!i);
+  const edited =
+    !!selectedOutfit &&
+    (addedSlots.length > 0 ||
+      selectedOutfit.slots.some(
+        (s) => removedRoles.has(`${selectedOutfit.id}-${s.role}`) || swapOverrides[`${selectedOutfit.id}-${s.role}`]
+      ));
+  const gap = closetGap(items);
 
   return (
     <div className="animate-fade-in min-h-screen">
@@ -104,16 +138,50 @@ export default function RecommendationsScreen({ occasionId, items, onBack, onCon
           Your {occasion.label} looks
         </h1>
         <p className="text-sm text-ink-400 mt-1">
-          {occasionOutfits.length} outfits curated from your wardrobe
+          {allOutfits.length === 0
+            ? 'No full looks yet'
+            : `${occasionOutfits.length} looks built from the ${items.length} pieces you own`}
         </p>
+        {weather && allOutfits.length > 0 && (
+          <p className="text-xs text-ink-400 mt-2 flex items-center gap-1.5" data-testid="reco-weather">
+            <WeatherIcon size={14} className="text-clay-500" />
+            Chosen for today: {weather.condition.toLowerCase()}, {fmt(weather.highC)} / {fmtShort(weather.lowC)}
+            {weather.rainChance >= 50 ? `, ${Math.round(weather.rainChance)}% rain` : ''}
+          </p>
+        )}
       </div>
+
+      {/* A closet that cannot make a look yet */}
+      {allOutfits.length === 0 && (
+        <div className="px-6 pt-2 pb-8">
+          <div className="p-5 rounded-3xl bg-clay-50 border border-clay-200">
+            <p className="text-sm text-clay-700 leading-relaxed">
+              {gap ?? 'FitCheck could not build a full look for this occasion from your closet.'}
+            </p>
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => onNavigate('quickadd')}
+                className="flex-1 py-3 rounded-xl bg-ink-900 text-cream-50 text-xs font-medium flex items-center justify-center gap-1.5"
+              >
+                <Plus size={14} /> Type what you own
+              </button>
+              <button
+                onClick={() => onNavigate('add')}
+                className="flex-1 py-3 rounded-xl border border-clay-300 text-clay-700 text-xs font-medium"
+              >
+                Add with a photo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Outfit selector tabs */}
       <div className="px-6 pt-2 pb-4">
         <div className="flex gap-2.5 overflow-x-auto no-scrollbar -mx-6 px-6">
           {occasionOutfits.map((outfit) => {
             const isLiked = likedOutfits.has(outfit.id);
-            const isSelected = outfit.id === selectedOutfitId;
+            const isSelected = outfit.id === selectedOutfit?.id;
             return (
               <button
                 key={outfit.id}
@@ -144,6 +212,14 @@ export default function RecommendationsScreen({ occasionId, items, onBack, onCon
               </button>
             );
           })}
+          {!showAll && allOutfits.length > FIRST_PAGE && (
+            <button
+              onClick={() => setShowAll(true)}
+              className="flex-shrink-0 px-4 py-2.5 rounded-2xl text-xs font-medium border border-dashed border-cream-400 text-ink-500 hover:border-ink-300"
+            >
+              + {allOutfits.length - FIRST_PAGE} more looks
+            </button>
+          )}
         </div>
       </div>
 
@@ -155,8 +231,8 @@ export default function RecommendationsScreen({ occasionId, items, onBack, onCon
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1">
                 <h2 className="text-xl font-serif text-ink-900">{selectedOutfit.name}</h2>
-                <p className="text-sm text-ink-400 mt-1 leading-relaxed">
-                  {selectedOutfit.description}
+                <p className="text-sm text-ink-400 mt-1 leading-relaxed" data-testid="look-reason">
+                  {edited ? 'Edited by you. The pieces below are your version of this look.' : selectedOutfit.description}
                 </p>
               </div>
               <button
@@ -176,18 +252,41 @@ export default function RecommendationsScreen({ occasionId, items, onBack, onCon
             </div>
           </div>
 
+          {/* Pieces or 3D figure */}
+          <div className="flex p-1 mb-4 rounded-2xl bg-cream-200/70" role="tablist" aria-label="How to view this look">
+            {([['pieces', 'Pieces', Shirt], ['figure', 'On a figure', PersonStanding]] as const).map(([id, label, Icon]) => (
+              <button
+                key={id}
+                role="tab"
+                aria-selected={view === id}
+                onClick={() => setView(id)}
+                className={`flex-1 py-2 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition-colors ${
+                  view === id ? 'bg-white text-ink-900 shadow-sm' : 'text-ink-400'
+                }`}
+              >
+                <Icon size={14} /> {label}
+              </button>
+            ))}
+          </div>
+
+          {view === 'figure' && (
+            <div className="mb-4">
+              <FigureCard items={effectiveItems} avatar={profile.avatar} />
+            </div>
+          )}
+
           {/* Outfit items - stacked layout */}
           <div className="space-y-3">
             {effectiveSlots.map((slot) => {
               const item = getItemById(items, slot.itemId);
               if (!item) return null;
-              const isRarelyWorn = item.lastWornDaysAgo >= 30;
+              const isRarelyWorn = isRarelyWorn30(item);
               const isOverridden = swapOverrides[`${selectedOutfit.id}-${slot.role}`] !== undefined;
               const isAdded = addedSlots.some((s) => s.role === slot.role && s.itemId === slot.itemId);
 
               return (
                 <div
-                  key={slot.role}
+                  key={`${slot.role}-${slot.itemId}`}
                   className="flex items-center gap-3 p-3 bg-white rounded-2xl border border-cream-200/60 group"
                 >
                   <div className="w-16 h-20 rounded-xl overflow-hidden bg-cream-200 flex-shrink-0">
@@ -227,7 +326,7 @@ export default function RecommendationsScreen({ occasionId, items, onBack, onCon
                     </p>
                     {isRarelyWorn && (
                       <p className="text-[10px] text-clay-400 mt-0.5">
-                        {formatLastWorn(item.lastWornDaysAgo)}
+                        {formatIdle(item)}
                       </p>
                     )}
                   </div>
@@ -308,6 +407,8 @@ export default function RecommendationsScreen({ occasionId, items, onBack, onCon
     </div>
   );
 }
+
+const isRarelyWorn30 = (item: ClothingItem) => isRarelyWorn(item);
 
 function SwapSheet({
   role,
@@ -405,7 +506,7 @@ function AddItemSheet({
   allItems: ClothingItem[];
   usedItemIds: Set<string>;
   rarelyWornItemIds: Set<string>;
-  onSelect: (item: ClothingItem, role: string) => void;
+  onSelect: (item: ClothingItem) => void;
   onClose: () => void;
 }) {
   const [selectedCategory, setSelectedCategory] = useState<Category | 'All'>('All');
@@ -459,7 +560,7 @@ function AddItemSheet({
                 return (
                   <button
                     key={item.id}
-                    onClick={() => onSelect(item, item.category)}
+                    onClick={() => onSelect(item)}
                     className="text-left group"
                   >
                     <div className="relative rounded-xl overflow-hidden bg-cream-200 aspect-[3/4]">

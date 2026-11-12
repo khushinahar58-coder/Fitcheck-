@@ -10,11 +10,9 @@ test('Wardrobe > Not worn recently shows old pieces and hides recent ones', asyn
   await expect(page.getByText('Silk Blouse')).toHaveCount(0);            // worn 5 days ago
 });
 
-// Known bug: Home counts the rarely-worn pieces after capping the list at six, so it says
-// "6 pieces" when 9 qualify. test.fail() keeps the suite green until the bug is fixed;
-// once it is, this test starts failing as a reminder to delete the test.fail line.
+// This was a known bug, kept visible with test.fail(): Home counted the rarely-worn pieces after
+// capping the list at six, so it said "6 pieces" when 9 qualify. Fixed in HomeScreen.
 test('Home > rarely-worn strip counts the 9 seed pieces worn 30+ days ago', async ({ page }) => {
-  test.fail();
   await page.goto('/');
   await expect(page.getByText("9 pieces you haven't worn in a while")).toBeVisible({ timeout: 3000 });
 });

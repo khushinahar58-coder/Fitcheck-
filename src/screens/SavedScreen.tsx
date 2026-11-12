@@ -13,6 +13,7 @@ import {
 import type { ClothingItem, SavedOutfit, CalendarEntry } from '../types';
 import { getItemById, todayISO } from '../store';
 import { getOccasionIcon, getWeatherIcon } from '../components/icons';
+import { useApp } from '../lib/appContext';
 import type { Screen } from '../App';
 
 interface Props {
@@ -40,6 +41,7 @@ export default function SavedScreen({
   onNavigate,
   onSaveOutfit,
 }: Props) {
+  const { fmt, fmtShort } = useApp();
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [draftName, setDraftName] = useState<string | null>(null);
   const [nameError, setNameError] = useState<string | null>(null);
@@ -98,7 +100,8 @@ export default function SavedScreen({
         viewingOutfit.occasionId
       ] ?? 'sparkles'
     );
-    const WeatherIcon = getWeatherIcon(viewingOutfit.weather.emoji);
+    const savedWeather = viewingOutfit.weather;
+    const WeatherIcon = getWeatherIcon(savedWeather?.emoji ?? 'cloud');
 
     return (
       <div className="animate-fade-in">
@@ -185,6 +188,7 @@ export default function SavedScreen({
         </div>
 
         {/* Weather when saved */}
+        {savedWeather && (
         <div className="px-6 pt-2">
           <div className="p-4 bg-cream-200/60 rounded-2xl flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-ink-900 flex items-center justify-center flex-shrink-0">
@@ -193,11 +197,12 @@ export default function SavedScreen({
             <div>
               <p className="text-xs text-ink-300 uppercase tracking-wider">Weather when saved</p>
               <p className="text-sm text-ink-800 mt-0.5">
-                {viewingOutfit.weather.condition} · {viewingOutfit.weather.tempHigh}° / {viewingOutfit.weather.tempLow}°
+                {savedWeather.condition} · {fmt(savedWeather.tempHigh)} / {fmtShort(savedWeather.tempLow)}
               </p>
             </div>
           </div>
         </div>
+        )}
 
         {/* Items */}
         <div className="px-6 pt-5">

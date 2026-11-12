@@ -26,8 +26,8 @@ function inkFor(hex: string): Ink {
   const light = isLightHex(hex);
   return {
     fill: hex,
-    edge: shade(hex, light ? -0.28 : -0.35),
-    line: light ? shade(hex, -0.2) : shade(hex, 0.28),
+    edge: shade(hex, light ? -0.42 : -0.35),
+    line: light ? shade(hex, -0.3) : shade(hex, 0.28),
     hi: light ? shade(hex, -0.07) : shade(hex, 0.14),
   };
 }
@@ -192,7 +192,7 @@ function draw(kind: Kind, k: Ink): string {
     // ---- Shoes (side view)
     case 'sneakers':
       return (
-        `<rect x="44" y="262" width="218" height="20" rx="10" fill="#F6F4EF" stroke="${k.edge}" stroke-width="2.5"/>` +
+        `<rect x="44" y="262" width="218" height="20" rx="10" fill="#E9E4DA" stroke="${k.edge}" stroke-width="2.5"/>` +
         body('M50 264 Q50 218 96 208 L128 202 Q148 172 176 184 L192 216 Q232 226 250 244 Q260 254 258 264 Z', k) +
         seam('M128 202 L176 228 M140 190 L188 214', k, 2) + seam('M186 230 Q214 236 240 250', k, 2) +
         seam('M60 236 Q78 222 100 222', k, 2)

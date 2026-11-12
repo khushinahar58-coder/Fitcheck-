@@ -1,8 +1,10 @@
-import { ArrowRight, Clock, Sparkles, CalendarDays } from 'lucide-react';
+import { ArrowRight, Clock, Sparkles, CalendarDays, MessageCircle, Droplets, Plus } from 'lucide-react';
 import type { ClothingItem, OccasionId, CalendarEntry } from '../types';
 import { OCCASIONS } from '../data';
-import { getOccasionIcon } from '../components/icons';
-import { getRarelyWornItems, formatLastWorn, getWornUrgency, getItemById } from '../store';
+import { getOccasionIcon, getWeatherIcon } from '../components/icons';
+import { getRarelyWornItems, formatIdle, getItemById, todayISO } from '../store';
+import { closetGap } from '../lib/engine';
+import { useApp } from '../lib/appContext';
 import type { Screen } from '../App';
 
 interface Props {
@@ -20,8 +22,21 @@ const OCCASION_EMOJI_MAP: Record<string, string> = {
   party: 'sparkles',
 };
 
+function greeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 5) return 'Good evening';
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
+}
+
 export default function HomeScreen({ items, onSelectOccasion, onNavigate, todaysEntries }: Props) {
-  const rarelyWorn = getRarelyWornItems(items, 30).slice(0, 6);
+  const { profile, settings, weatherFor, forecastStatus, fmt, fmtShort } = useApp();
+  const allRarelyWorn = getRarelyWornItems(items, 30);
+  const rarelyWorn = allRarelyWorn.slice(0, 6);
+  const gap = closetGap(items);
+  const weather = weatherFor(todayISO());
+  const WeatherIcon = getWeatherIcon(weather?.icon ?? 'cloud-sun');
 
   return (
     <div className="animate-fade-in">
@@ -29,18 +44,51 @@ export default function HomeScreen({ items, onSelectOccasion, onNavigate, todays
       <div className="px-6 pt-14 pb-2">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-ink-300 font-medium">
-              Good morning
-            </p>
-            <h1 className="text-2xl font-serif font-medium text-ink-900 mt-1">Khushi</h1>
+            <p className="text-xs uppercase tracking-[0.2em] text-ink-300 font-medium">{greeting()}</p>
+            <h1 className="text-2xl font-serif font-medium text-ink-900 mt-1">{profile.name}</h1>
           </div>
           <button
             onClick={() => onNavigate('profile')}
+            aria-label="Profile and settings"
             className="w-11 h-11 rounded-full bg-cream-200 flex items-center justify-center border border-cream-300 hover:scale-105 transition-transform"
           >
-            <span className="font-serif text-base text-ink-700">K</span>
+            <span className="font-serif text-base text-ink-700">{profile.name.charAt(0).toUpperCase()}</span>
           </button>
         </div>
+
+        {/* Today's weather */}
+        <button
+          onClick={() => onNavigate('profile')}
+          className="mt-4 w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-white border border-cream-300/60 text-left hover:border-ink-200 transition-colors"
+          data-testid="weather-strip"
+        >
+          <WeatherIcon size={20} className="text-clay-500 flex-shrink-0" strokeWidth={1.8} />
+          {weather ? (
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-ink-800">
+                {weather.condition} · {fmt(weather.highC)} / {fmtShort(weather.lowC)}
+              </p>
+              <p className="text-xs text-ink-400 truncate">
+                {settings.city.name}
+                {weather.rainChance >= 30 && (
+                  <span className="inline-flex items-center gap-0.5 ml-2 text-clay-500">
+                    <Droplets size={11} /> {Math.round(weather.rainChance)}% rain
+                  </span>
+                )}
+              </p>
+            </div>
+          ) : (
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-ink-700">
+                {forecastStatus === 'loading' ? 'Getting the forecast…' : 'Forecast unavailable'}
+              </p>
+              <p className="text-xs text-ink-400 truncate">
+                {forecastStatus === 'loading' ? settings.city.name : 'Looks are built without weather for now'}
+              </p>
+            </div>
+          )}
+          <span className="text-[11px] text-ink-300 flex-shrink-0">Change</span>
+        </button>
       </div>
 
       {/* Today's Outfit banner */}
@@ -50,9 +98,7 @@ export default function HomeScreen({ items, onSelectOccasion, onNavigate, todays
             <CalendarDays size={16} className="text-ink-500" />
             <h3 className="text-sm font-serif text-ink-900">Today's Outfit</h3>
             {todaysEntries.length > 1 && (
-              <span className="text-xs text-ink-300">
-                · {todaysEntries.length} planned
-              </span>
+              <span className="text-xs text-ink-300">· {todaysEntries.length} planned</span>
             )}
           </div>
           <div className="space-y-3">
@@ -60,30 +106,26 @@ export default function HomeScreen({ items, onSelectOccasion, onNavigate, todays
               const OccasionIcon = getOccasionIcon(OCCASION_EMOJI_MAP[entry.occasionId] ?? 'sparkles');
               const firstItems = entry.slots.slice(0, 3);
               return (
-                <div
+                <button
                   key={entry.id}
-                  className="bg-white rounded-2xl overflow-hidden border border-cream-200/60"
+                  onClick={() => onNavigate('calendar')}
+                  className="w-full text-left bg-white rounded-2xl overflow-hidden border border-cream-200/60"
                 >
                   <div className="flex gap-1 h-28 bg-cream-200">
                     {firstItems.map((slot) => {
                       const item = getItemById(items, slot.itemId);
                       if (!item) return null;
                       return (
-                        <div key={slot.role} className="flex-1 overflow-hidden">
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            loading="lazy"
-                            className="w-full h-full object-cover"
-                          />
+                        <div key={`${slot.role}-${slot.itemId}`} className="flex-1 overflow-hidden">
+                          <img src={item.image} alt={item.name} loading="lazy" className="w-full h-full object-cover" />
                         </div>
                       );
                     })}
                   </div>
                   <div className="p-3 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <OccasionIcon size={14} className="text-ink-400" />
-                      <span className="text-sm font-serif text-ink-800">{entry.outfitName}</span>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <OccasionIcon size={14} className="text-ink-400 flex-shrink-0" />
+                      <span className="text-sm font-serif text-ink-800 truncate">{entry.outfitName}</span>
                     </div>
                     {entry.worn ? (
                       <span className="px-2 py-0.5 rounded-full bg-sage-100 text-[10px] font-medium text-sage-500 flex items-center gap-0.5">
@@ -95,7 +137,7 @@ export default function HomeScreen({ items, onSelectOccasion, onNavigate, todays
                       </span>
                     )}
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -108,12 +150,52 @@ export default function HomeScreen({ items, onSelectOccasion, onNavigate, todays
           What are we dressing for?
         </h2>
         <p className="text-sm text-ink-400 mt-2 leading-relaxed">
-          Pick an occasion and we'll curate outfits from your wardrobe.
+          Pick an occasion, or just ask. Every look is built from pieces you already own.
         </p>
       </div>
 
+      {/* A closet that cannot make a look yet */}
+      {gap && (
+        <div className="px-6 pb-4">
+          <div className="p-4 rounded-2xl bg-clay-50 border border-clay-200">
+            <p className="text-sm text-clay-700 leading-relaxed">{gap}</p>
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={() => onNavigate('quickadd')}
+                className="flex-1 py-2.5 rounded-xl bg-ink-900 text-cream-50 text-xs font-medium flex items-center justify-center gap-1.5"
+              >
+                <Plus size={14} /> Type what you own
+              </button>
+              <button
+                onClick={() => onNavigate('add')}
+                className="flex-1 py-2.5 rounded-xl border border-clay-300 text-clay-700 text-xs font-medium"
+              >
+                Add with a photo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ask FitCheck */}
+      <div className="px-6 pb-3">
+        <button
+          onClick={() => onNavigate('ask')}
+          className="w-full flex items-center gap-3 p-4 rounded-3xl bg-ink-900 text-left group hover:bg-ink-800 transition-colors"
+        >
+          <div className="w-10 h-10 rounded-2xl bg-cream-50/10 flex items-center justify-center flex-shrink-0">
+            <MessageCircle size={20} className="text-gold-300" strokeWidth={1.8} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm font-medium text-cream-50">Ask FitCheck</h3>
+            <p className="text-xs text-cream-300 mt-0.5 truncate">"What do I wear to a birthday dinner Friday?"</p>
+          </div>
+          <ArrowRight size={18} className="text-cream-300 group-hover:translate-x-1 transition-transform" />
+        </button>
+      </div>
+
       {/* Occasions */}
-      <div className="px-6 pt-2 space-y-3">
+      <div className="px-6 pt-1 space-y-3">
         {OCCASIONS.map((occasion, i) => {
           const Icon = getOccasionIcon(occasion.emoji);
           return (
@@ -144,30 +226,29 @@ export default function HomeScreen({ items, onSelectOccasion, onNavigate, todays
       </div>
 
       {/* Rarely worn section */}
-      <div className="pt-10 pb-6">
-        <div className="px-6 flex items-center justify-between mb-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <Clock size={16} className="text-clay-400" />
-              <h3 className="text-lg font-serif text-ink-900">Bring something back into rotation</h3>
+      {allRarelyWorn.length > 0 && (
+        <div className="pt-10 pb-6">
+          <div className="px-6 flex items-center justify-between mb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <Clock size={16} className="text-clay-400" />
+                <h3 className="text-lg font-serif text-ink-900">Bring something back into rotation</h3>
+              </div>
+              <p className="text-xs text-ink-300 mt-1">
+                {allRarelyWorn.length} {allRarelyWorn.length === 1 ? 'piece' : 'pieces'} you haven't worn in a while
+              </p>
             </div>
-            <p className="text-xs text-ink-300 mt-1">
-              {rarelyWorn.length} pieces you haven't worn in a while
-            </p>
+            <button
+              onClick={() => onNavigate('wardrobe')}
+              className="text-xs font-medium text-ink-500 hover:text-ink-900 transition-colors flex items-center gap-1"
+            >
+              View all
+              <ArrowRight size={14} />
+            </button>
           </div>
-          <button
-            onClick={() => onNavigate('wardrobe')}
-            className="text-xs font-medium text-ink-500 hover:text-ink-900 transition-colors flex items-center gap-1"
-          >
-            View all
-            <ArrowRight size={14} />
-          </button>
-        </div>
 
-        <div className="flex gap-3 overflow-x-auto no-scrollbar px-6 pb-2">
-          {rarelyWorn.map((item) => {
-            const urgency = getWornUrgency(item.lastWornDaysAgo);
-            return (
+          <div className="flex gap-3 overflow-x-auto no-scrollbar px-6 pb-2">
+            {rarelyWorn.map((item) => (
               <button
                 key={item.id}
                 onClick={() => onNavigate('wardrobe')}
@@ -181,25 +262,19 @@ export default function HomeScreen({ items, onSelectOccasion, onNavigate, todays
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-cream-50/90 backdrop-blur-sm">
-                    <span
-                      className={`text-[10px] font-medium ${
-                        urgency === 'rarely' ? 'text-clay-500' : 'text-ink-500'
-                      }`}
-                    >
-                      {item.category}
-                    </span>
+                    <span className="text-[10px] font-medium text-clay-500">{item.category}</span>
                   </div>
                 </div>
                 <h4 className="text-sm font-medium text-ink-800 mt-2 truncate">{item.name}</h4>
-                <p className="text-xs text-clay-400 mt-0.5">{formatLastWorn(item.lastWornDaysAgo)}</p>
+                <p className="text-xs text-clay-400 mt-0.5">{formatIdle(item)}</p>
               </button>
-            );
-          })}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Quick stats */}
-      <div className="px-6 pt-2 pb-8">
+      <div className={`px-6 pb-8 ${allRarelyWorn.length > 0 ? 'pt-2' : 'pt-8'}`}>
         <button
           onClick={() => onNavigate('wardrobe')}
           className="w-full p-5 bg-gradient-to-br from-ink-900 to-ink-700 rounded-3xl text-left group hover:scale-[1.02] transition-transform duration-300"
@@ -208,11 +283,11 @@ export default function HomeScreen({ items, onSelectOccasion, onNavigate, todays
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Sparkles size={16} className="text-gold-300" />
-                <span className="text-xs uppercase tracking-wider text-gold-300 font-medium">
-                  Your Wardrobe
-                </span>
+                <span className="text-xs uppercase tracking-wider text-gold-300 font-medium">Your Wardrobe</span>
               </div>
-              <p className="text-2xl font-serif text-cream-50">{items.length} pieces</p>
+              <p className="text-2xl font-serif text-cream-50">
+                {items.length} {items.length === 1 ? 'piece' : 'pieces'}
+              </p>
               <p className="text-xs text-cream-300 mt-1">Tap to browse your full collection</p>
             </div>
             <ArrowRight className="text-cream-300 group-hover:translate-x-1 transition-transform" />

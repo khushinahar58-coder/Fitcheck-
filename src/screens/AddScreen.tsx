@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Camera, ImagePlus, Check, X, Sparkles, ArrowRight, Wand2, ShoppingBag } from 'lucide-react';
+import { Camera, ImagePlus, Check, X, Sparkles, ArrowRight, Wand2, ShoppingBag, Keyboard } from 'lucide-react';
 import type { ClothingItem, Category } from '../types';
 import { CATEGORIES, SAMPLE_GALLERY } from '../data';
 import type { Screen } from '../App';
@@ -144,6 +144,25 @@ export default function AddScreen({ onAddItem, onNavigate, currentCount }: Props
           {/* Smart features */}
           <div className="grid grid-cols-1 gap-3">
             <button
+              onClick={() => onNavigate('quickadd')}
+              className="w-full flex items-center gap-4 p-4 bg-ink-900 rounded-2xl hover:bg-ink-800 transition-colors text-left group"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-cream-50/10 flex items-center justify-center flex-shrink-0">
+                <Keyboard size={22} className="text-gold-300" strokeWidth={1.6} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-medium text-cream-50">Type what you own</h3>
+                <p className="text-xs text-cream-300 mt-0.5">
+                  List your clothes and add them all at once. The fastest way to start.
+                </p>
+              </div>
+              <ArrowRight
+                size={18}
+                className="text-cream-300 group-hover:translate-x-1 transition-transform"
+              />
+            </button>
+
+            <button
               onClick={() => onNavigate('extract')}
               className="w-full flex items-center gap-4 p-4 bg-white rounded-2xl border border-cream-200/60 hover:border-ink-200 hover:shadow-md transition-all text-left group"
             >
@@ -151,7 +170,10 @@ export default function AddScreen({ onAddItem, onNavigate, currentCount }: Props
                 <Wand2 size={22} className="text-clay-600" strokeWidth={1.6} />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-medium text-ink-900">Extract from outfit photo</h3>
+                <h3 className="text-sm font-medium text-ink-900 flex items-center gap-2">
+                  Extract from outfit photo
+                  <span className="px-1.5 py-0.5 rounded-full bg-cream-200 text-[9px] font-medium uppercase tracking-wider text-ink-400">Demo</span>
+                </h3>
                 <p className="text-xs text-ink-300 mt-0.5">
                   Upload a photo of an outfit — we'll identify each piece
                 </p>
@@ -170,7 +192,10 @@ export default function AddScreen({ onAddItem, onNavigate, currentCount }: Props
                 <ShoppingBag size={22} className="text-sage-500" strokeWidth={1.6} />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-medium text-ink-900">Import past purchases</h3>
+                <h3 className="text-sm font-medium text-ink-900 flex items-center gap-2">
+                  Import past purchases
+                  <span className="px-1.5 py-0.5 rounded-full bg-cream-200 text-[9px] font-medium uppercase tracking-wider text-ink-400">Demo</span>
+                </h3>
                 <p className="text-xs text-ink-300 mt-0.5">
                   Connect shopping accounts to find clothes you already own
                 </p>

@@ -50,7 +50,7 @@ export interface SavedOutfit {
   occasionLabel: string;
   name: string;
   slots: OutfitSlot[];
-  weather: WeatherInfo;
+  weather?: WeatherInfo; // missing when no forecast was available at save time
   savedAt: number;
 }
 

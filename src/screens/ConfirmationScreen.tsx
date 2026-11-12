@@ -8,21 +8,24 @@ import {
   Sun,
   Droplets,
   Wind,
+  Moon,
+  AlertTriangle,
   CalendarDays,
   X,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
 import type { ClothingItem, SavedOutfit, CalendarEntry } from '../types';
-import { SAMPLE_WEATHER } from '../data';
 import { getItemById, todayISO, formatLongDate } from '../store';
 import { getWeatherIcon } from '../components/icons';
+import { checkOutfitForWeather } from '../lib/engine';
+import { toWeatherInfo } from '../lib/weather';
+import { useApp } from '../lib/appContext';
 import type { ConfirmationContext, Screen } from '../App';
 
 interface Props {
   ctx: ConfirmationContext;
   items: ClothingItem[];
-  savedOutfits: SavedOutfit[];
   onBack: () => void;
   onSaveOutfit: (outfit: SavedOutfit) => void;
   onAddToCalendar: (entry: Omit<CalendarEntry, 'id'>) => void;
@@ -40,21 +43,29 @@ const DOW = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 export default function ConfirmationScreen({
   ctx,
   items,
-  savedOutfits,
   onBack,
   onSaveOutfit,
   onAddToCalendar,
   onNavigate,
 }: Props) {
-  const weather = SAMPLE_WEATHER[ctx.occasionId];
-  const WeatherIcon = getWeatherIcon(weather.emoji);
+  const { weatherFor, fmt, fmtShort, settings } = useApp();
+  const today = todayISO();
+  // A look asked for a later day ("dinner Friday") is planned for that day, not today.
+  const planDate = ctx.planDate && ctx.planDate > today ? ctx.planDate : today;
+  const forToday = planDate === today;
+  // Real forecast for that day, or the weather the user described when asking.
+  const weather = ctx.weather !== undefined ? ctx.weather : weatherFor(planDate);
+  const WeatherIcon = getWeatherIcon(weather?.icon ?? 'cloud');
+  const outfitItems = ctx.slots
+    .map((slot) => getItemById(items, slot.itemId))
+    .filter((item): item is ClothingItem => !!item);
+  const check = weather ? checkOutfitForWeather(outfitItems, items, weather, ctx.occasionId, fmt) : null;
   const [phase, setPhase] = useState<Phase>('weather');
   const [showToast, setShowToast] = useState<string | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [pickerDate, setPickerDate] = useState<string>(todayISO());
+  const [pickerDate, setPickerDate] = useState<string>(planDate);
 
   // Date picker state
-  const today = todayISO();
   const todayDate = new Date(today + 'T00:00:00');
   const [viewYear, setViewYear] = useState(todayDate.getFullYear());
   const [viewMonth, setViewMonth] = useState(todayDate.getMonth());
@@ -77,11 +88,11 @@ export default function ConfirmationScreen({
     else setViewMonth((m) => m + 1);
   };
 
-  // Keep Outfit: adds to calendar for today, does NOT mark as worn
+  // Keep Outfit: adds to the calendar for the plan date (usually today), does NOT mark as worn
   const handleKeepOutfit = () => {
     onAddToCalendar({
       savedOutfitId: ctx.outfitId,
-      date: today,
+      date: planDate,
       occasionId: ctx.occasionId,
       occasionLabel: ctx.occasionLabel,
       outfitName: ctx.outfitName,
@@ -103,7 +114,7 @@ export default function ConfirmationScreen({
       occasionLabel: ctx.occasionLabel,
       name: ctx.outfitName,
       slots: ctx.slots,
-      weather,
+      weather: weather && check ? toWeatherInfo(weather, check.note) : undefined,
       savedAt: Date.now(),
     };
     onSaveOutfit(savedOutfit);
@@ -155,50 +166,79 @@ export default function ConfirmationScreen({
           {ctx.outfitName}
         </h1>
         <p className="text-sm text-ink-400 mt-1">
-          Here's your outfit — let's check the weather.
+          {weather ? "Here's your outfit, checked against the weather." : "Here's your outfit."}
         </p>
       </div>
 
       {/* Weather card */}
       <div className="px-6 pt-4">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-ink-800 to-ink-600 p-6">
-          <div className="absolute -right-4 -top-4 opacity-10">
-            <WeatherIcon size={120} className="text-cream-50" strokeWidth={1} />
+        {weather && check ? (
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-ink-800 to-ink-600 p-6" data-testid="weather-card">
+            <div className="absolute -right-4 -top-4 opacity-10">
+              <WeatherIcon size={120} className="text-cream-50" strokeWidth={1} />
+            </div>
+            <div className="relative">
+              <div className="flex items-center gap-2 mb-1">
+                <WeatherIcon size={18} className="text-gold-300" />
+                <span className="text-xs uppercase tracking-wider text-gold-300 font-medium">
+                  {weather.stated ? 'Weather you described' : forToday ? "Today's weather" : `Forecast for ${formatLongDate(planDate)}`}
+                </span>
+              </div>
+              <div className="flex items-baseline gap-3 mt-3">
+                <span className="text-5xl font-serif text-cream-50">{fmtShort(weather.highC)}</span>
+                <span className="text-lg text-cream-300">/ {fmt(weather.lowC)}</span>
+              </div>
+              <p className="text-sm text-cream-200 mt-1">
+                {weather.condition}
+                {!weather.stated && ` · ${settings.city.name}`}
+              </p>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 mt-4">
+                <div className="flex items-center gap-1.5">
+                  <Sun size={14} className="text-gold-300" />
+                  <span className="text-xs text-cream-300">High {fmtShort(weather.highC)}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Moon size={14} className="text-cream-300" />
+                  <span className="text-xs text-cream-300">Low {fmtShort(weather.lowC)}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Droplets size={14} className="text-cream-300" />
+                  <span className="text-xs text-cream-300">{Math.round(weather.rainChance)}% rain</span>
+                </div>
+                {!weather.stated && (
+                  <div className="flex items-center gap-1.5">
+                    <Wind size={14} className="text-cream-300" />
+                    <span className="text-xs text-cream-300">
+                      {settings.unit === 'F' ? `${Math.round(weather.windKph * 0.621)} mph` : `${Math.round(weather.windKph)} km/h`}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div className={`mt-4 p-3 backdrop-blur-sm rounded-2xl ${check.ok ? 'bg-cream-50/10' : 'bg-gold-300/20'}`}>
+                <div className="flex items-start gap-2">
+                  {check.ok ? (
+                    <Sparkles size={14} className="text-gold-300 flex-shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertTriangle size={14} className="text-gold-300 flex-shrink-0 mt-0.5" />
+                  )}
+                  <p className="text-xs text-cream-100 leading-relaxed" data-testid="weather-check">{check.note}</p>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="relative">
-            <div className="flex items-center gap-2 mb-1">
-              <WeatherIcon size={18} className="text-gold-300" />
-              <span className="text-xs uppercase tracking-wider text-gold-300 font-medium">
-                Today's Weather
-              </span>
-            </div>
-            <div className="flex items-baseline gap-3 mt-3">
-              <span className="text-5xl font-serif text-cream-50">{weather.tempHigh}°</span>
-              <span className="text-lg text-cream-300">/ {weather.tempLow}°</span>
-            </div>
-            <p className="text-sm text-cream-200 mt-1">{weather.condition}</p>
-            <div className="flex gap-4 mt-4">
-              <div className="flex items-center gap-1.5">
-                <Sun size={14} className="text-gold-300" />
-                <span className="text-xs text-cream-300">High {weather.tempHigh}°</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Droplets size={14} className="text-cream-300" />
-                <span className="text-xs text-cream-300">Low {weather.tempLow}°</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Wind size={14} className="text-cream-300" />
-                <span className="text-xs text-cream-300">Light breeze</span>
-              </div>
-            </div>
-            <div className="mt-4 p-3 bg-cream-50/10 backdrop-blur-sm rounded-2xl">
-              <div className="flex items-start gap-2">
-                <Sparkles size={14} className="text-gold-300 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-cream-200 leading-relaxed">{weather.note}</p>
-              </div>
+        ) : (
+          <div className="rounded-3xl bg-cream-200/70 border border-cream-300/60 p-5 flex items-start gap-3">
+            <WeatherIcon size={20} className="text-ink-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-ink-700">No forecast for this day</p>
+              <p className="text-xs text-ink-400 mt-0.5 leading-relaxed">
+                {forToday
+                  ? 'The forecast could not be loaded. You can set your city on the Profile screen.'
+                  : 'Forecasts only reach about two weeks ahead.'}
+              </p>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Outfit items preview */}
@@ -211,7 +251,7 @@ export default function ConfirmationScreen({
             const item = getItemById(items, slot.itemId);
             if (!item) return null;
             return (
-              <div key={slot.role} className="bg-white rounded-2xl overflow-hidden border border-cream-200/60">
+              <div key={`${slot.role}-${slot.itemId}`} className="bg-white rounded-2xl overflow-hidden border border-cream-200/60">
                 <div className="aspect-square bg-cream-200 overflow-hidden">
                   <img src={item.image} alt={item.name} loading="lazy" className="w-full h-full object-cover" />
                 </div>
@@ -230,7 +270,7 @@ export default function ConfirmationScreen({
         {phase === 'weather' && (
           <>
             <p className="text-sm text-ink-400 text-center">
-              Does this outfit work for the weather?
+              {check && !check.ok ? 'Wear it anyway, or go back and change a piece.' : 'Happy with it?'}
             </p>
             <div>
               <button
@@ -239,10 +279,10 @@ export default function ConfirmationScreen({
                 className="w-full py-4 rounded-2xl text-sm font-medium transition-all flex items-center justify-center gap-2 bg-ink-900 text-cream-50 hover:bg-ink-800"
               >
                 <CalendarDays size={18} />
-                Wearing this today
+                {forToday ? 'Wearing this today' : `Plan for ${formatLongDate(planDate)}`}
               </button>
               <p id="wear-today-hint" className="text-xs text-ink-400 text-center mt-1.5">
-                Puts it on today's calendar. Mark it worn there once you've worn it.
+                {forToday ? "Puts it on today's calendar." : 'Puts it on the calendar for that day.'} Mark it worn there once you've worn it.
               </p>
             </div>
             <div>
@@ -275,7 +315,7 @@ export default function ConfirmationScreen({
               <div>
                 <p className="text-sm font-medium text-sage-500">Added to your calendar</p>
                 <p className="text-xs text-sage-500/70 mt-0.5">
-                  Planned for {formatLongDate(today)}. Mark it worn on the calendar once you've worn it.
+                  Planned for {formatLongDate(planDate)}. Mark it worn on the calendar once you've worn it.
                 </p>
               </div>
             </div>
@@ -407,7 +447,7 @@ export default function ConfirmationScreen({
             <div className="w-20 h-20 rounded-full bg-sage-500 flex items-center justify-center mx-auto mb-4">
               <CalendarDays size={32} className="text-cream-50" />
             </div>
-            <h2 className="text-xl font-serif text-ink-900">Planned for today!</h2>
+            <h2 className="text-xl font-serif text-ink-900">{forToday ? 'Planned for today!' : 'On your calendar!'}</h2>
             <p className="text-sm text-ink-400 mt-1">See it on your calendar</p>
           </div>
         </div>

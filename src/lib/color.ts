@@ -72,6 +72,8 @@ const COLORS: Array<[string, string, string, boolean]> = [
   ['purple', '#6B4A8C', 'purple', false],
   ['plum', '#5A2F4E', 'purple', false],
   ['blue', '#3F6AA8', 'blue', false],
+  // Last, so any real color word wins: "dark jeans", "dark coat".
+  ['dark', '#2E3440', 'grey', true],
 ];
 
 const PATTERN_WORDS = ['floral', 'stripe', 'striped', 'plaid', 'check', 'gingham', 'print', 'leopard', 'polka', 'paisley', 'tartan'];
