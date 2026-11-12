@@ -1,0 +1,18 @@
+name: Tests
+
+# Runs the unit and integration tests (Vitest) on every push, on any branch.
+# A pull request shows the result as a check. The browser test (Playwright) runs
+# locally with `npm run test:e2e`.
+on: push
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm test
