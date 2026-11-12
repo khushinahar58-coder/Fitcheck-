@@ -1,11 +1,11 @@
 # FitCheck — Product Spec
 
-**Status:** Draft for team discussion · **Updated:** 2026-10-27 · **Read with:** [README](../README.md) · [Ideas backlog](IDEAS-BACKLOG.md)
+**Status:** Draft for team discussion · **Updated:** 2026-11-11 · **Read with:** [README](../README.md) · [Ideas backlog](IDEAS-BACKLOG.md)
 
 Sections 1–3 describe the product and the build as they stand. Section 4 onward is a **proposal**, not an agreed plan.
 Change it freely.
 
-**Contents:** [1. Product](#1-product) · [2. User stories](#2-user-stories) · [3. Current build](#3-current-build-bolt-export-2026-10-27) · [4. Proposed v1 scope](#4-proposed-v1-scope) · [5. Success measures](#5-success-measures-draft-oecs) · [6. AI evaluation plan](#6-ai-evaluation-plan-draft) · [7. Open questions](#7-open-questions)
+**Contents:** [1. Product](#1-product) · [2. User stories](#2-user-stories) · [3. Current build](#3-current-build-2026-11-11) · [4. Proposed v1 scope](#4-proposed-v1-scope) · [5. Success measures](#5-success-measures-draft-oecs) · [6. AI evaluation plan](#6-ai-evaluation-plan-draft) · [7. Open questions](#7-open-questions)
 
 ---
 
@@ -36,32 +36,48 @@ to effortless, or the user never reaches the value.
 | S6 | Save outfits and plan them on a calendar | I can get ready ahead for the week |
 | S7 | See when I last wore each piece | I can avoid repeats and spot what's sitting unused |
 
-## 3. Current Build (Bolt export, 2026-10-27)
+## 3. Current Build (2026-11-11)
 
-**Stack:** React 18 · TypeScript · Vite · Tailwind · lucide-react. No backend: `@supabase/supabase-js` is installed
-but never imported. State lives in `localStorage` (`fitcheck-wardrobe`, `fitcheck-saved`, `fitcheck-calendar`).
+**Stack:** React 18 · TypeScript · Vite · Tailwind · lucide-react · three.js (loaded only when a 3D figure is
+opened). No backend and no AI model. State lives in `localStorage`, one set of keys per profile
+(`fitcheck-wardrobe`, `fitcheck-saved`, `fitcheck-calendar`, with a `:profile-id` suffix for every profile after
+the first), plus `fitcheck-profiles`, `fitcheck-settings` and a one-hour forecast cache. The only network call the
+app makes itself is to Open-Meteo for the forecast and city search.
+
+**Where the logic lives** (`src/lib/`, all covered by `tests/`)
+
+| File | What it does |
+|---|---|
+| `engine.ts` | Builds looks from the closet and scores them; writes the one-line reason; checks a look against a forecast |
+| `attributes.ts` | Reads a piece's kind, dressiness, warmth and rain-readiness from its name and tags |
+| `ask.ts` | Turns a typed request into engine settings (occasion, day, weather words, preferences) |
+| `weather.ts` | Open-Meteo forecast and city search; °C/°F |
+| `profiles.ts` | Profiles, per-profile storage keys, settings, erase |
+| `quickAdd.ts`, `art.ts` | "Type what you own": a list becomes pieces, each with a drawn picture |
+| `../three/buildFigure.ts` | The 3D figure, made from basic shapes (no model file) |
 
 **Data model** (`src/types.ts`)
 
 | Type | Key fields |
 |---|---|
-| `ClothingItem` | name, category (Tops, Bottoms, Dresses, Outerwear, Shoes, Accessories), image, color, brand, `wearDates[]`, `lastWornDaysAgo` (worked out from `wearDates`) |
-| `Outfit` | occasion, name, description, `slots[]` (role + item) |
-| `SavedOutfit` | outfit snapshot + the weather at save time |
-| `CalendarEntry` | date, outfit snapshot, `worn` flag |
-| `WeatherInfo` | condition, high, low, note |
+| `ClothingItem` | name, category (Tops, Bottoms, Dresses, Outerwear, Shoes, Accessories), image, color, brand, `wearDates[]`, `lastWornDaysAgo` (worked out from `wearDates`), `addedAt` |
+| `Outfit` | occasion, name, description, `slots[]` (role + item), `reasons[]` |
+| `SavedOutfit` | outfit snapshot + the weather at save time (if there was a forecast) |
+| `CalendarEntry` | date, outfit snapshot, `worn` flag, `wornOn` (the date recorded on the pieces) |
+| `DayWeather` | one forecast day: condition, high and low in °C, rain chance, wind |
+| `WeatherInfo` | the weather snapshot kept with a saved look |
 
 **Story coverage**
 
 | Story | Status | How |
 |---|---|---|
-| S1 Add clothes | 🟡 Partial | Manual add with a photo works. Photo extraction and purchase import are simulated |
-| S2 Occasion outfits | 🟡 Simulated | 18 fixed looks across 5 occasions in `src/data.ts`; nothing is generated |
-| S3 Rediscovery | ✅ Real logic | "Rarely worn" = 30+ days since last wear; insights on Profile |
-| S4 Weather | 🟡 Simulated | Fixed values per occasion; no unit label |
+| S1 Add clothes | 🟡 Partial | Add with a photo, or type a list and add it all at once (drawn pictures). Photo extraction and purchase import are still simulated and labelled Demo |
+| S2 Occasion outfits | ✅ Real (rules) | Looks are generated from the closet by `engine.ts`, with a reason for each. Not a language model |
+| S3 Rediscovery | ✅ Real logic | "Rarely worn" = 30+ days since last wear, or since it was added if never worn. The engine favors these pieces and puts one in the first three looks when one fits |
+| S4 Weather | ✅ Real | Live forecast for a chosen city, °F/°C; looks are built for it and the chosen look is checked against it |
 | S5 Edit outfits | ✅ Real | Swap, remove, add an item (layers) |
-| S6 Save and plan | ✅ Real | Saved looks and a monthly calendar |
-| S7 Wear history | ✅ Real logic | Marking a calendar entry worn records the date on each piece; starter data is preset |
+| S6 Save and plan | ✅ Real | Saved looks and a monthly calendar; a look asked for a later day is planned for that day |
+| S7 Wear history | ✅ Real logic | Marking a calendar entry worn records the date on each piece, and can be undone; starter data is preset |
 
 **Usability findings (birthday-dinner scenario)**
 
@@ -72,13 +88,23 @@ but never imported. State lives in `localStorage` (`fitcheck-wardrobe`, `fitchec
 
 **Known issues**
 
-- Photos are stored as base64 in `localStorage` (~5 MB cap).
-- No temperature unit on the weather card.
-- 4 lint errors (unused imports). Typecheck and build pass.
+- Photos are stored as base64 in `localStorage` (~5 MB cap). The app now warns when storage is full; shrinking
+  photos on upload is open as PR #1.
+- The engine's taste is untested with users. Its rules (which colors go together, how dressy each occasion is)
+  are one person's judgment written down.
+- Ask FitCheck is pattern matching. It handles the cases in section 6 and says what it understood, but it will
+  miss phrasings nobody thought of.
+- The 3D figure shows colors, layers and lengths. It does not show fit, fabric or the actual garment.
+- Removing a piece leaves saved looks and calendar entries that still point at it (they show fewer pieces).
 
 ## 4. Proposed v1 Scope
 
 > **Proposal.** The principle: replace simulated features with real ones, in the order that makes or breaks the product.
+>
+> **Status on 2026-11-11.** Built without a backend or an AI model: generated recommendations (as rules), live
+> weather with °C/°F, clear actions, and Ask FitCheck (as pattern matching). Not built: real closet setup from
+> photos and real storage, which both need a backend and a decision on models and cost (open questions 3 to 5).
+> "Type what you own" is a stopgap for setup until then.
 
 | Priority | Feature | Replaces | Notes |
 |---|---|---|---|
@@ -114,6 +140,12 @@ For the recommendation engine and the chat:
 - **Rubric (pass/fail):** uses only owned pieces · matches occasion · suits the forecast · includes a rarely-worn piece
   when one fits · gives a one-line reason · no shopping suggestions.
 - Keep the test cases separate from the cases used while tuning the prompt.
+
+**Where this stands.** The rubric and the cases above are now automated tests for the rules engine and Ask
+FitCheck: `tests/engine.test.ts` checks every rubric line for both starter closets across all five occasions and
+five kinds of weather, and `tests/ask.test.ts` holds the golden and adversarial requests. They ran against the same
+closets the rules were tuned on, so they show the rules do what was intended, not that people like the looks. If a
+language model replaces either part later, these tests are the bar it has to clear.
 
 ## 7. Open Questions
 
