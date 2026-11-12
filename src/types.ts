@@ -18,6 +18,7 @@ export interface ClothingItem {
   lastWornDaysAgo: number; // Worked out from wearDates when the app reads items. 0 = today, -1 = never
   tags: string[];
   wearDates?: string[]; // ISO date strings when item was marked as worn. The source of truth
+  addedAt?: string; // ISO date the piece joined the closet. Lets a never-worn piece go stale
 }
 
 export interface Occasion {
@@ -39,6 +40,7 @@ export interface Outfit {
   description: string;
   slots: OutfitSlot[];
   featured?: boolean;
+  reasons?: string[]; // why the engine picked this look, most important first
 }
 
 export interface SavedOutfit {
@@ -52,6 +54,20 @@ export interface SavedOutfit {
   savedAt: number;
 }
 
+// One day of real forecast. Temperatures are stored in Celsius and converted for display.
+export interface DayWeather {
+  date: string; // ISO date
+  code: number; // WMO weather code
+  condition: string;
+  icon: string;
+  highC: number;
+  lowC: number;
+  rainChance: number; // 0-100
+  windKph: number;
+  stated?: boolean; // true when the user described the weather instead of a forecast
+}
+
+// The weather snapshot kept with a saved look. Temperatures are Celsius.
 export interface WeatherInfo {
   condition: string;
   emoji: string;
@@ -71,4 +87,5 @@ export interface CalendarEntry {
   addedAt: number;
   worn: boolean;
   wornAt?: number;
+  wornOn?: string; // ISO date recorded on the pieces when this entry was marked worn
 }

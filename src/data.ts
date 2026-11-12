@@ -1,4 +1,5 @@
-import type { ClothingItem, Category, Occasion, Outfit, WeatherInfo } from './types';
+import type { ClothingItem, Category, Occasion } from './types';
+import { garmentArt } from './lib/art';
 import claudeCodeHat from './assets/wardrobe/claude-code-hat.jpg';
 import openaiBlossomHat from './assets/wardrobe/openai-blossom-hat.png';
 
@@ -307,6 +308,43 @@ export const CLOTHING_ITEMS: ClothingItem[] = [
     lastWornDaysAgo: 90,
     tags: ['accessory', 'rarely-worn'],
   },
+];
+
+// A second starter closet, so the app is not only one person's clothes. The two hats are real
+// (photos); the rest are common pieces drawn by lib/art.ts, since there are no photos of them.
+function drawn(
+  id: string,
+  name: string,
+  category: Category,
+  color: string,
+  brand: string,
+  lastWornDaysAgo: number,
+  tags: string[]
+): ClothingItem {
+  return { id, name, category, color, brand, lastWornDaysAgo, tags, image: garmentArt({ name, category, color, tags }) };
+}
+
+export const SECOND_CLOSET_ITEMS: ClothingItem[] = [
+  drawn('m-t1', 'Oxford Shirt', 'Tops', 'White', 'J.Crew', 6, ['shirt', 'work']),
+  drawn('m-t2', 'Crewneck Sweater', 'Tops', 'Navy', 'Uniqlo', 38, ['knit', 'rarely-worn']),
+  drawn('m-t3', 'T-Shirt', 'Tops', 'Heather Grey', 'Uniqlo', 2, ['tee', 'everyday']),
+  drawn('m-t4', 'Polo', 'Tops', 'Black', 'Lacoste', 51, ['polo', 'rarely-worn']),
+  drawn('m-t5', 'Chambray Shirt', 'Tops', 'Light Blue', 'Everlane', 16, ['shirt', 'casual']),
+  drawn('m-b1', 'Slim Jeans', 'Bottoms', 'Indigo', "Levi's", 1, ['denim', 'everyday']),
+  drawn('m-b2', 'Chinos', 'Bottoms', 'Khaki', 'Bonobos', 12, ['chino']),
+  drawn('m-b3', 'Wool Trousers', 'Bottoms', 'Charcoal', 'Suitsupply', 44, ['tailored', 'rarely-worn']),
+  drawn('m-b4', 'Chinos', 'Bottoms', 'Olive', 'J.Crew', 75, ['chino', 'rarely-worn']),
+  drawn('m-o1', 'Blazer', 'Outerwear', 'Navy', 'Suitsupply', 33, ['formal', 'rarely-worn']),
+  drawn('m-o2', 'Wool Overcoat', 'Outerwear', 'Charcoal', 'COS', 240, ['coat', 'rarely-worn']),
+  drawn('m-o3', 'Field Jacket', 'Outerwear', 'Olive', 'Barbour', 9, ['casual']),
+  drawn('m-o4', 'Rain Jacket', 'Outerwear', 'Navy', 'Patagonia', 21, ['rain']),
+  drawn('m-s1', 'Leather Sneakers', 'Shoes', 'White', 'Common Projects', 2, ['casual', 'everyday']),
+  drawn('m-s2', 'Chelsea Boots', 'Shoes', 'Brown', 'Blundstone', 27, ['boots']),
+  drawn('m-s3', 'Dress Shoes', 'Shoes', 'Black', 'Allen Edmonds', 62, ['formal', 'rarely-worn']),
+  drawn('m-s4', 'Loafers', 'Shoes', 'Tan', 'G.H. Bass', 40, ['rarely-worn']),
+  drawn('m-a1', 'Leather Belt', 'Accessories', 'Brown', 'Anderson', 3, ['belt']),
+  drawn('m-a2', 'Watch', 'Accessories', 'Steel', 'Seiko', 1, ['watch', 'everyday']),
+  drawn('m-a3', 'Wool Scarf', 'Accessories', 'Grey', 'Acne Studios', 250, ['scarf', 'rarely-worn']),
   {
     id: 'a5',
     name: 'Claude Code Hat',
@@ -328,275 +366,6 @@ export const CLOTHING_ITEMS: ClothingItem[] = [
     tags: ['hat', 'casual'],
   },
 ];
-
-export const OUTFITS: Outfit[] = [
-  // WORK
-  {
-    id: 'work-1',
-    occasionId: 'work',
-    name: 'The Power Suit',
-    description: 'A sharp blazer over tailored trousers — boardroom-ready and effortless.',
-    slots: [
-      { role: 'Outerwear', itemId: 'o1' },
-      { role: 'Top', itemId: 't1' },
-      { role: 'Bottom', itemId: 'b2' },
-      { role: 'Shoes', itemId: 's4' },
-      { role: 'Accessory', itemId: 'a2' },
-    ],
-    featured: true,
-  },
-  {
-    id: 'work-2',
-    occasionId: 'work',
-    name: 'Soft Tailoring',
-    description: 'Wide-leg trousers and a cozy turtleneck for a refined yet comfortable day.',
-    slots: [
-      { role: 'Top', itemId: 't4' },
-      { role: 'Bottom', itemId: 'b3' },
-      { role: 'Shoes', itemId: 's4' },
-      { role: 'Accessory', itemId: 'a1' },
-    ],
-  },
-  {
-    id: 'work-3',
-    occasionId: 'work',
-    name: 'Polished Knit',
-    description: 'A cashmere sweater with structured trousers — comfort meets credibility.',
-    slots: [
-      { role: 'Top', itemId: 't2' },
-      { role: 'Bottom', itemId: 'b2' },
-      { role: 'Shoes', itemId: 's2' },
-      { role: 'Accessory', itemId: 'a2' },
-    ],
-  },
-  {
-    id: 'work-4',
-    occasionId: 'work',
-    name: 'Effortless Layers',
-    description: 'A knit cardigan layered over a silk blouse for a softly confident look.',
-    slots: [
-      { role: 'Top', itemId: 't1' },
-      { role: 'Layer', itemId: 't5' },
-      { role: 'Bottom', itemId: 'b3' },
-      { role: 'Shoes', itemId: 's4' },
-    ],
-  },
-
-  // DINNER OUT
-  {
-    id: 'dinner-1',
-    occasionId: 'dinner',
-    name: 'Elevated Neutrals',
-    description: 'A silk camisole tucked into wide-leg pants — quietly luxurious.',
-    slots: [
-      { role: 'Top', itemId: 't3' },
-      { role: 'Bottom', itemId: 'b3' },
-      { role: 'Shoes', itemId: 's2' },
-      { role: 'Accessory', itemId: 'a3' },
-    ],
-    featured: true,
-  },
-  {
-    id: 'dinner-2',
-    occasionId: 'dinner',
-    name: 'Bistro Chic',
-    description: 'A floral midi dress with ankle boots — feminine with an edge.',
-    slots: [
-      { role: 'Dress', itemId: 'd1' },
-      { role: 'Shoes', itemId: 's2' },
-      { role: 'Accessory', itemId: 'a2' },
-    ],
-  },
-  {
-    id: 'dinner-3',
-    occasionId: 'dinner',
-    name: 'Evening Ease',
-    description: 'A pleated skirt with a tucked-in blouse — sophisticated and comfortable.',
-    slots: [
-      { role: 'Top', itemId: 't1' },
-      { role: 'Bottom', itemId: 'b5' },
-      { role: 'Shoes', itemId: 's1' },
-      { role: 'Accessory', itemId: 'a3' },
-    ],
-  },
-  {
-    id: 'dinner-4',
-    occasionId: 'dinner',
-    name: 'Trench & Boots',
-    description: 'Layer a classic trench over dark trousers for a cool-weather dinner.',
-    slots: [
-      { role: 'Top', itemId: 't3' },
-      { role: 'Bottom', itemId: 'b2' },
-      { role: 'Outerwear', itemId: 'o2' },
-      { role: 'Shoes', itemId: 's2' },
-    ],
-  },
-
-  // DATE NIGHT
-  {
-    id: 'date-1',
-    occasionId: 'date',
-    name: 'Slip & Statement',
-    description: 'A champagne silk slip dress with gold earrings — pure romance.',
-    slots: [
-      { role: 'Dress', itemId: 'd2' },
-      { role: 'Shoes', itemId: 's1' },
-      { role: 'Accessory', itemId: 'a3' },
-    ],
-    featured: true,
-  },
-  {
-    id: 'date-2',
-    occasionId: 'date',
-    name: 'Edgy Elegance',
-    description: 'A leather jacket over a black slip dress — magnetic and bold.',
-    slots: [
-      { role: 'Dress', itemId: 'd3' },
-      { role: 'Outerwear', itemId: 'o3' },
-      { role: 'Shoes', itemId: 's1' },
-      { role: 'Accessory', itemId: 'a2' },
-    ],
-  },
-  {
-    id: 'date-3',
-    occasionId: 'date',
-    name: 'Feminine Charm',
-    description: 'A floral midi with delicate heels — soft, pretty, and memorable.',
-    slots: [
-      { role: 'Dress', itemId: 'd1' },
-      { role: 'Shoes', itemId: 's1' },
-      { role: 'Accessory', itemId: 'a4' },
-    ],
-  },
-
-  // CASUAL WEEKEND
-  {
-    id: 'casual-1',
-    occasionId: 'casual',
-    name: 'Weekend Classic',
-    description: 'High-waist jeans with a cashmere sweater — cozy and timeless.',
-    slots: [
-      { role: 'Top', itemId: 't2' },
-      { role: 'Bottom', itemId: 'b1' },
-      { role: 'Shoes', itemId: 's3' },
-      { role: 'Accessory', itemId: 'a1' },
-    ],
-    featured: true,
-  },
-  {
-    id: 'casual-2',
-    occasionId: 'casual',
-    name: 'Denim Days',
-    description: 'A denim jacket over jeans and a camisole — double denim done right.',
-    slots: [
-      { role: 'Top', itemId: 't3' },
-      { role: 'Bottom', itemId: 'b1' },
-      { role: 'Outerwear', itemId: 'o4' },
-      { role: 'Shoes', itemId: 's3' },
-    ],
-  },
-  {
-    id: 'casual-3',
-    occasionId: 'casual',
-    name: 'Skirt & Sneakers',
-    description: 'A midi skirt dressed down with sneakers — unexpected and effortless.',
-    slots: [
-      { role: 'Top', itemId: 't5' },
-      { role: 'Bottom', itemId: 'b4' },
-      { role: 'Shoes', itemId: 's3' },
-    ],
-  },
-  {
-    id: 'casual-4',
-    occasionId: 'casual',
-    name: 'Cozy Layers',
-    description: 'A cardigan over jeans with boots — perfect for a crisp morning walk.',
-    slots: [
-      { role: 'Top', itemId: 't5' },
-      { role: 'Bottom', itemId: 'b1' },
-      { role: 'Shoes', itemId: 's2' },
-      { role: 'Accessory', itemId: 'a4' },
-    ],
-  },
-
-  // PARTY
-  {
-    id: 'party-1',
-    occasionId: 'party',
-    name: 'Statement Silk',
-    description: 'A champagne slip dress with bold earrings — made for the spotlight.',
-    slots: [
-      { role: 'Dress', itemId: 'd2' },
-      { role: 'Shoes', itemId: 's1' },
-      { role: 'Accessory', itemId: 'a3' },
-      { role: 'Accessory 2', itemId: 'a4' },
-    ],
-    featured: true,
-  },
-  {
-    id: 'party-2',
-    occasionId: 'party',
-    name: 'After Dark',
-    description: 'A black slip dress with a leather jacket — cool, bold, unforgettable.',
-    slots: [
-      { role: 'Dress', itemId: 'd3' },
-      { role: 'Outerwear', itemId: 'o3' },
-      { role: 'Shoes', itemId: 's1' },
-      { role: 'Accessory', itemId: 'a3' },
-    ],
-  },
-  {
-    id: 'party-3',
-    occasionId: 'party',
-    name: 'Glam Edge',
-    description: 'A pleated skirt with a silk cami and heels — refined with a party twist.',
-    slots: [
-      { role: 'Top', itemId: 't3' },
-      { role: 'Bottom', itemId: 'b5' },
-      { role: 'Shoes', itemId: 's1' },
-      { role: 'Accessory', itemId: 'a3' },
-      { role: 'Accessory 2', itemId: 'a2' },
-    ],
-  },
-];
-
-export const SAMPLE_WEATHER: Record<string, WeatherInfo> = {
-  work: {
-    condition: 'Partly Cloudy',
-    emoji: 'cloud-sun',
-    tempHigh: 22,
-    tempLow: 14,
-    note: 'A light layer is a smart call — mornings are cool.',
-  },
-  dinner: {
-    condition: 'Clear Evening',
-    emoji: 'moon-star',
-    tempHigh: 19,
-    tempLow: 11,
-    note: 'Comfortable now, but it cools down after sunset.',
-  },
-  date: {
-    condition: 'Mild & Breezy',
-    emoji: 'wind',
-    tempHigh: 18,
-    tempLow: 10,
-    note: 'Bring a jacket — it gets chilly later tonight.',
-  },
-  casual: {
-    condition: 'Sunny',
-    emoji: 'sun',
-    tempHigh: 24,
-    tempLow: 16,
-    note: 'A beautiful day — no extra layers needed.',
-  },
-  party: {
-    condition: 'Clear Night',
-    emoji: 'moon',
-    tempHigh: 16,
-    tempLow: 9,
-    note: 'Crisp night air — a jacket for the walk home.',
-  },
-};
 
 export const SAMPLE_GALLERY: string[] = [
   'https://images.pexels.com/photos/32661325/pexels-photo-32661325.jpeg?auto=compress&cs=tinysrgb&h=650&w=940',

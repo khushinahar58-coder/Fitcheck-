@@ -1,10 +1,9 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import type { ClothingItem, SavedOutfit, CalendarEntry } from './types';
-import { CLOTHING_ITEMS } from './data';
+import { FIRST_PROFILE_ID, starterItems, storageKeys, type Starter } from './lib/profiles';
+import { daysBetween, idleDays, todayISO, toISODate } from './lib/wear';
 
-const STORAGE_KEY = 'fitcheck-wardrobe';
-const SAVED_KEY = 'fitcheck-saved';
-const CALENDAR_KEY = 'fitcheck-calendar';
+export { todayISO } from './lib/wear';
 
 function loadFromStorage<T>(key: string, fallback: T): T {
   try {
@@ -16,21 +15,14 @@ function loadFromStorage<T>(key: string, fallback: T): T {
   }
 }
 
-function toISODate(date: Date): string {
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${date.getFullYear()}-${month}-${day}`;
-}
-
-// The user's local date. toISOString() is UTC, which is already tomorrow on a US evening.
-export function todayISO(): string {
-  return toISODate(new Date());
-}
-
-function daysBetween(fromISO: string, toISO: string): number {
-  const ms = new Date(toISO + 'T00:00:00').getTime() - new Date(fromISO + 'T00:00:00').getTime();
-  // Round because a day is 23 or 25 hours when the clocks change.
-  return Math.round(ms / 86_400_000);
+function saveToStorage(key: string, value: unknown): boolean {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch {
+    // Usually the ~5 MB localStorage cap, hit by photos. The app keeps working for this visit.
+    return false;
+  }
 }
 
 // Starter pieces (and data saved before wear dates were kept) only have a day count.
@@ -52,20 +44,42 @@ function daysSinceLastWorn(item: ClothingItem, today: string): number {
   return Math.max(0, daysBetween(latest, today));
 }
 
-export function useWardrobeStore() {
+// The date a wear is recorded under: a look planned for a future date but worn now counts as today.
+function wearDateFor(dateISO: string | undefined, today: string): string {
+  return dateISO && dateISO < today ? dateISO : today;
+}
+
+const sameLook = (a: string[], b: string[]) =>
+  a.length === b.length && [...a].sort().join('|') === [...b].sort().join('|');
+
+export interface StoreProfile {
+  id: string;
+  starter: Starter;
+}
+
+const FIRST_PROFILE: StoreProfile = { id: FIRST_PROFILE_ID, starter: 'first' };
+
+export function useWardrobeStore(profile: StoreProfile = FIRST_PROFILE) {
+  const keys = useMemo(() => storageKeys(profile.id), [profile.id]);
+
   const [storedItems, setItems] = useState<ClothingItem[]>(() =>
-    withWearDates(loadFromStorage(STORAGE_KEY, CLOTHING_ITEMS))
+    withWearDates(loadFromStorage(keys.wardrobe, starterItems(profile.starter)))
   );
-  const [savedOutfits, setSavedOutfits] = useState<SavedOutfit[]>(() =>
-    loadFromStorage(SAVED_KEY, [])
-  );
-  const [calendarEntries, setCalendarEntries] = useState<CalendarEntry[]>(() =>
-    loadFromStorage(CALENDAR_KEY, [])
-  );
+  const [savedOutfits, setSavedOutfits] = useState<SavedOutfit[]>(() => loadFromStorage(keys.saved, []));
+  const [calendarEntries, setCalendarEntries] = useState<CalendarEntry[]>(() => loadFromStorage(keys.calendar, []));
+  const [storageFull, setStorageFull] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(storedItems));
-  }, [storedItems]);
+    setStorageFull(!saveToStorage(keys.wardrobe, storedItems));
+  }, [keys, storedItems]);
+
+  useEffect(() => {
+    saveToStorage(keys.saved, savedOutfits);
+  }, [keys, savedOutfits]);
+
+  useEffect(() => {
+    saveToStorage(keys.calendar, calendarEntries);
+  }, [keys, calendarEntries]);
 
   const today = todayISO();
   const items = useMemo(
@@ -73,18 +87,16 @@ export function useWardrobeStore() {
     [storedItems, today]
   );
 
-  useEffect(() => {
-    localStorage.setItem(SAVED_KEY, JSON.stringify(savedOutfits));
-  }, [savedOutfits]);
-
-  useEffect(() => {
-    localStorage.setItem(CALENDAR_KEY, JSON.stringify(calendarEntries));
-  }, [calendarEntries]);
-
-  const addItem = useCallback((item: Omit<ClothingItem, 'id'>) => {
-    const id = `user-${Date.now()}`;
-    setItems((prev) => [...prev, { ...item, id }]);
+  const addItems = useCallback((newItems: Array<Omit<ClothingItem, 'id'>>) => {
+    const stamp = Date.now();
+    const added = todayISO();
+    setItems((prev) => [
+      ...prev,
+      ...newItems.map((item, i) => ({ addedAt: added, ...item, id: `user-${stamp}-${i}` })),
+    ]);
   }, []);
+
+  const addItem = useCallback((item: Omit<ClothingItem, 'id'>) => addItems([item]), [addItems]);
 
   const updateItem = useCallback((id: string, changes: Partial<Omit<ClothingItem, 'id'>>) => {
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...changes } : i)));
@@ -110,24 +122,54 @@ export function useWardrobeStore() {
 
   const addOutfitToCalendar = useCallback((entry: Omit<CalendarEntry, 'id'>) => {
     const id = `cal-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    setCalendarEntries((prev) => [...prev, { ...entry, id }]);
+    setCalendarEntries((prev) => {
+      // The same pieces on the same day is the same plan. Adding it twice would show two
+      // identical cards, each with its own "Mark as worn".
+      const ids = entry.slots.map((s) => s.itemId);
+      const already = prev.some((e) => e.date === entry.date && sameLook(e.slots.map((s) => s.itemId), ids));
+      return already ? prev : [...prev, { ...entry, id }];
+    });
   }, []);
 
-  const removeCalendarEntry = useCallback((id: string) => {
-    setCalendarEntries((prev) => prev.filter((e) => e.id !== id));
+  // Take a wear back off the pieces, unless another worn look that day used the same piece.
+  const takeBackWear = useCallback((entry: CalendarEntry, entries: CalendarEntry[]) => {
+    const day = entry.wornOn ?? wearDateFor(entry.date, entry.wornAt ? toISODate(new Date(entry.wornAt)) : todayISO());
+    const stillWorn = new Set(
+      entries
+        .filter((e) => e.id !== entry.id && e.worn && (e.wornOn ?? e.date) === day)
+        .flatMap((e) => e.slots.map((s) => s.itemId))
+    );
+    const ids = new Set(entry.slots.map((s) => s.itemId).filter((id) => !stillWorn.has(id)));
+    setItems((prev) =>
+      prev.map((item) =>
+        ids.has(item.id) && item.wearDates?.includes(day)
+          ? { ...item, wearDates: item.wearDates.filter((d) => d !== day) }
+          : item
+      )
+    );
   }, []);
+
+  const removeCalendarEntry = useCallback(
+    (id: string) => {
+      const entry = calendarEntries.find((e) => e.id === id);
+      if (entry?.worn) takeBackWear(entry, calendarEntries);
+      setCalendarEntries((prev) => prev.filter((e) => e.id !== id));
+    },
+    [calendarEntries, takeBackWear]
+  );
 
   const markCalendarEntryWorn = useCallback((entryId: string) => {
     const now = Date.now();
+    const today = todayISO();
     setCalendarEntries((prev) =>
-      prev.map((e) => (e.id === entryId ? { ...e, worn: true, wornAt: now } : e))
+      prev.map((e) =>
+        e.id === entryId ? { ...e, worn: true, wornAt: now, wornOn: wearDateFor(e.date, today) } : e
+      )
     );
   }, []);
 
   const markItemsWorn = useCallback((itemIds: string[], dateISO?: string) => {
-    const today = todayISO();
-    // Wearing a look planned for a future date means it was worn today.
-    const wearDate = dateISO && dateISO < today ? dateISO : today;
+    const wearDate = wearDateFor(dateISO, todayISO());
     setItems((prev) =>
       prev.map((item) => {
         if (!itemIds.includes(item.id)) return item;
@@ -138,9 +180,21 @@ export function useWardrobeStore() {
     );
   }, []);
 
+  // Undo "Mark as worn": the look goes back to planned and the wear comes off its pieces.
+  const unmarkCalendarEntryWorn = useCallback(
+    (entryId: string) => {
+      const entry = calendarEntries.find((e) => e.id === entryId);
+      if (!entry?.worn) return;
+      takeBackWear(entry, calendarEntries);
+      setCalendarEntries((prev) =>
+        prev.map((e) => (e.id === entryId ? { ...e, worn: false, wornAt: undefined, wornOn: undefined } : e))
+      );
+    },
+    [calendarEntries, takeBackWear]
+  );
+
   const getCalendarEntriesForDate = useCallback(
-    (dateISO: string): CalendarEntry[] =>
-      calendarEntries.filter((e) => e.date === dateISO),
+    (dateISO: string): CalendarEntry[] => calendarEntries.filter((e) => e.date === dateISO),
     [calendarEntries]
   );
 
@@ -149,11 +203,20 @@ export function useWardrobeStore() {
     [getCalendarEntriesForDate]
   );
 
+  // Put the starter closet back and clear saved looks and the calendar.
+  const resetCloset = useCallback(() => {
+    setItems(withWearDates(starterItems(profile.starter)));
+    setSavedOutfits([]);
+    setCalendarEntries([]);
+  }, [profile.starter]);
+
   return {
     items,
     savedOutfits,
     calendarEntries,
+    storageFull,
     addItem,
+    addItems,
     updateItem,
     removeItem,
     saveOutfit,
@@ -161,9 +224,11 @@ export function useWardrobeStore() {
     addOutfitToCalendar,
     removeCalendarEntry,
     markCalendarEntryWorn,
+    unmarkCalendarEntryWorn,
     markItemsWorn,
     getCalendarEntriesForDate,
     getTodaysEntries,
+    resetCloset,
   };
 }
 
@@ -176,10 +241,12 @@ export function getItemsByCategory(items: ClothingItem[], category: string): Clo
   return items.filter((i) => i.category === category);
 }
 
+// Pieces that have sat for `threshold` days or more, longest first. A piece that has never
+// been worn counts from the day it was added.
 export function getRarelyWornItems(items: ClothingItem[], threshold = 30): ClothingItem[] {
   return items
-    .filter((i) => i.lastWornDaysAgo >= threshold)
-    .sort((a, b) => b.lastWornDaysAgo - a.lastWornDaysAgo);
+    .filter((i) => idleDays(i) >= threshold)
+    .sort((a, b) => idleDays(b) - idleDays(a));
 }
 
 export function formatLastWorn(daysAgo: number): string {
@@ -192,6 +259,14 @@ export function formatLastWorn(daysAgo: number): string {
   if (daysAgo < 60) return 'Worn last month';
   if (daysAgo < 90) return 'Over 2 months ago';
   return 'Over 3 months ago';
+}
+
+// Like formatLastWorn, but a never-worn piece says how long it has been waiting.
+export function formatIdle(item: ClothingItem): string {
+  if (item.lastWornDaysAgo >= 0) return formatLastWorn(item.lastWornDaysAgo);
+  const waiting = idleDays(item);
+  if (waiting >= 30) return `Never worn · added ${waiting} days ago`;
+  return 'Not worn yet';
 }
 
 export function getWornUrgency(daysAgo: number): 'fresh' | 'moderate' | 'rarely' {
