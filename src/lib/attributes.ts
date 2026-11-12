@@ -126,19 +126,24 @@ export function attrsOf(item: Pick<ClothingItem, 'name' | 'category' | 'color' |
 }
 
 // Which shelf a typed phrase belongs on ("navy blazer" -> Outerwear). Used by "type what you own".
-// Order matters: "denim jacket" must reach Outerwear before Bottoms sees "denim".
-const CATEGORY_HINTS: Array<[Category, RegExp]> = [
-  ['Dresses', /dress(?! (shirt|shoe|pant))|gown|jumpsuit|romper/],
-  ['Outerwear', /blazer|coat|jacket|trench|parka|puffer|windbreaker|anorak|shell\b|vest|gilet/],
-  ['Shoes', /shoe|sneaker|trainer|boot|heel|pump|loafer|sandal|flat\b|flats|oxfords|derb(y|ies)|brogue|slide|mule|runner/],
-  ['Accessories', /\bbag\b|handbag|tote|purse|crossbody|clutch|backpack|necklace|earring|bracelet|ring\b|scarf|\bhat\b|\bcap\b|beanie|belt|watch|sunglass|\btie\b|glove|sock/],
-  ['Bottoms', /jeans|pants|trouser|slacks|chino|khakis|shorts|skirt|legging|jogger|sweatpant|denim/],
-  ['Tops', /./],
+// The last clothing word decides: a "denim shirt" is a shirt, "bootcut jeans" are jeans, a
+// "dress shirt" is a shirt and "dress shoes" are shoes.
+const SHELF_WORDS: Array<[Category, RegExp]> = [
+  ['Dresses', /^(dress|dresses|gown|jumpsuit|romper)$/],
+  ['Outerwear', /^(blazer|coat|overcoat|raincoat|peacoat|topcoat|jacket|trench|parka|puffer|windbreaker|anorak|vest|gilet)s?$/],
+  ['Shoes', /^(shoes?|sneakers?|trainers?|boots?|heels?|pumps?|loafers?|sandals?|oxfords|brogues?|slides|mules?|runners|slippers?|flats|derbies)$/],
+  ['Accessories', /^(bag|handbag|tote|purse|crossbody|clutch|backpack|necklace|earring|bracelet|ring|scarf|scarves|hat|cap|beanie|belt|watch|sunglasses|shades|tie|glove|sock)s?$/],
+  ['Bottoms', /^(jeans|pants|trousers?|slacks|chinos?|khakis|shorts|skirts?|leggings|joggers|sweatpants)$/],
+  ['Tops', /^(shirt|tee|t-shirt|tshirt|top|blouse|sweater|cardigan|hoodie|polo|turtleneck|camisole|cami|tank|sweatshirt|jumper|pullover|crewneck)s?$/],
 ];
 
 export function guessCategory(phrase: string): Category {
-  const text = phrase.toLowerCase();
-  return CATEGORY_HINTS.find(([, re]) => re.test(text))![0];
+  const words = phrase.toLowerCase().split(/[^a-z-]+/).filter(Boolean);
+  for (let i = words.length - 1; i >= 0; i--) {
+    const shelf = SHELF_WORDS.find(([, re]) => re.test(words[i]));
+    if (shelf) return shelf[0];
+  }
+  return 'Tops';
 }
 
 // The label an outfit slot shows for this piece ("Top", "Layer", "Bag").

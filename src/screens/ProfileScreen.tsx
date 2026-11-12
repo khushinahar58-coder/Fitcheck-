@@ -559,8 +559,10 @@ export default function ProfileScreen({
         <h3 className="text-sm font-medium text-ink-500 uppercase tracking-wider mb-3">Your data</h3>
         <div className="bg-white rounded-3xl border border-cream-200/60 p-5">
           <p className="text-xs text-ink-500 leading-relaxed">
-            Your closets, photos, saved looks and calendar are stored only in this browser. Nothing is uploaded and
-            there is no account. The one thing sent out is your city's coordinates, to Open-Meteo, to get the forecast.
+            Your closets, photos, saved looks and calendar are stored only in this browser. They are never uploaded
+            and there is no account. The app does contact three outside services: Open-Meteo for the forecast (it
+            receives your city's coordinates, any city name you search for, and your location if you tap "Use my
+            location"), Google Fonts for the typefaces, and Pexels for the first starter closet's photos.
           </p>
           <div className="mt-4 space-y-2">
             <button

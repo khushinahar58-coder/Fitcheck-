@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowRight, ArrowUp, Heart, Info, MessageCircle, Plus } from
 import type { CalendarEntry, ClothingItem, Outfit } from '../types';
 import { OCCASIONS } from '../data';
 import { getItemById } from '../store';
-import { answerAsk, EXAMPLE_ASKS, type AskAnswer } from '../lib/ask';
+import { answerAsk, EXAMPLE_ASKS, type AskTurn } from '../lib/ask';
 import { useApp } from '../lib/appContext';
 import FigureCard from '../components/FigureCard';
 import type { AvatarConfig } from '../lib/profiles';
@@ -12,6 +12,8 @@ import type { ConfirmationContext, Screen } from '../App';
 interface Props {
   items: ClothingItem[];
   calendarEntries: CalendarEntry[];
+  turns: AskTurn[];
+  onTurnsChange: (update: (prev: AskTurn[]) => AskTurn[]) => void;
   onBack: () => void;
   onConfirmOutfit: (ctx: ConfirmationContext) => void;
   onNavigate: (s: Screen) => void;
@@ -35,23 +37,18 @@ function FigureToggle({ items, avatar }: { items: ClothingItem[]; avatar: Avatar
   );
 }
 
-interface Turn {
-  id: number;
-  question: string;
-  answer: AskAnswer;
-}
+type Turn = AskTurn;
 
-export default function AskScreen({ items, calendarEntries, onBack, onConfirmOutfit, onNavigate }: Props) {
+export default function AskScreen({ items, calendarEntries, turns, onTurnsChange, onBack, onConfirmOutfit, onNavigate }: Props) {
   const { forecast, fmt, fmtShort, profile } = useApp();
   const [draft, setDraft] = useState('');
-  const [turns, setTurns] = useState<Turn[]>([]);
   const endRef = useRef<HTMLDivElement>(null);
 
   const ask = (text: string) => {
     const question = text.trim();
     if (question.length < 2) return;
     const answer = answerAsk(question, { items, forecast, entries: calendarEntries, formatTemp: fmt });
-    setTurns((prev) => [...prev, { id: Date.now(), question, answer }]);
+    onTurnsChange((prev) => [...prev, { id: Date.now(), question, answer }]);
     setDraft('');
   };
 

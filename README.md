@@ -151,7 +151,7 @@ To reset a closet or erase everything the app has stored, use **Profile → Your
 
 The live app is at **https://khushinahar58-coder.github.io/Fitcheck-/**. `.github/workflows/deploy-pages.yml` typechecks, builds and publishes it to GitHub Pages on every push to `main`; **Actions → Deploy to GitHub Pages → Run workflow** redeploys on demand. The build uses relative paths, so it keeps working if the repo is renamed (the URL follows the new name).
 
-The live app starts on a starter closet and saves to your browser only; nothing you add leaves your device. The one request it makes is to Open-Meteo, with your city's coordinates, for the forecast.
+The live app starts on a starter closet and saves to your browser only; nothing you add leaves your device. It does contact three outside services: Open-Meteo for the forecast and city search (your city's coordinates, or your location if you choose "Use my location"), Google Fonts for the typefaces, and Pexels for the starter photos.
 
 </details>
 

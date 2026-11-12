@@ -440,14 +440,34 @@ export function generateOutfits(o: EngineOptions): Outfit[] {
     return wanted.length ? wanted : group;
   };
 
+  // On a big closet, trying every combination would freeze the screen. Only the most promising
+  // few of each kind go into the combinations; anything the user asked for always stays in.
+  // Small closets (like the starter ones) are under every limit, so nothing is left out.
+  const keep = (group: Piece[], limit: number, weatherFit: (p: Piece) => number = () => 0): Piece[] => {
+    if (group.length <= limit) return group;
+    const worth = (p: Piece) =>
+      (required.has(p.item.id) ? 100 : 0) -
+      occasionPenalty(p, profile.lo, profile.hi) -
+      recencyPenalty(p) +
+      rediscoverBonus(p) +
+      (STYLE_NUDGE[o.occasionId][p.a.kind] ?? 0) +
+      weatherFit(p);
+    return [...group].sort((x, y) => worth(y) - worth(x) || x.item.id.localeCompare(y.item.id)).slice(0, limit);
+  };
+  const cold = w?.chill === 'cold' || w?.chill === 'freezing';
+  const warmthFit = (p: Piece) => (w?.chill === 'hot' ? -p.a.warmth : cold ? p.a.warmth * 0.5 : 0);
+  const shoeFit = (p: Piece) =>
+    (w?.rain ? (p.a.rainOk ? 1.5 : p.a.open ? -3 : -1.5) : 0) + (cold && p.a.open ? -2 : 0);
+  const outerFit = (p: Piece) => (w?.rain && p.a.rainOk ? 1.2 : 0) + (cold ? p.a.warmth : 0);
+
   const allTops = of('Tops');
-  const cardigans = allTops.filter((p) => p.a.kind === 'cardigan');
+  const cardigans = keep(allTops.filter((p) => p.a.kind === 'cardigan'), 2);
   const baseTops = allTops.some((p) => p.a.kind !== 'cardigan') ? allTops.filter((p) => p.a.kind !== 'cardigan') : allTops;
-  const tops = need(baseTops);
-  const bottoms = need(of('Bottoms'));
-  const dresses = need(of('Dresses'));
-  const shoes = need(of('Shoes'));
-  const outers = of('Outerwear');
+  const tops = keep(need(baseTops), 12, warmthFit);
+  const bottoms = keep(need(of('Bottoms')), 10);
+  const dresses = keep(need(of('Dresses')), 8);
+  const shoes = keep(need(of('Shoes')), 6, shoeFit);
+  const outers = keep(of('Outerwear'), 6, outerFit);
   // Hats belong to days off (unless the user asked for one).
   const accessories = of('Accessories').filter(
     (p) => p.a.kind !== 'hat' || o.occasionId === 'casual' || required.has(p.item.id)
@@ -471,11 +491,15 @@ export function generateOutfits(o: EngineOptions): Outfit[] {
 
   const candidates: Candidate[] = [];
   for (const b of bases) {
-    const mids = cardigans.filter((m) => m !== b.top && (b.top?.a.warmth ?? 0) < 2);
+    // A cardigan goes over a light top, or over anything if the user asked for it.
+    const mids = cardigans.filter((m) => m !== b.top && ((b.top?.a.warmth ?? 0) < 2 || requiredMid.includes(m)));
     const layerings: Array<{ mid?: Piece; outer?: Piece }> = [{}];
     for (const mid of mids) layerings.push({ mid });
     for (const outer of outers) layerings.push({ outer });
-    if (veryCold) for (const mid of mids) for (const outer of outers) layerings.push({ mid, outer });
+    // Both layers together when it is very cold, or when the user asked for one of each.
+    if (veryCold || (requiredMid.length && requiredOuter.length)) {
+      for (const mid of mids) for (const outer of outers) layerings.push({ mid, outer });
+    }
 
     const usable = layerings.filter(
       (l) =>

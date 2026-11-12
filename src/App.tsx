@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { Home, Shirt, Plus, Bookmark, CalendarDays } from 'lucide-react';
 import { useWardrobeStore } from './store';
 import type { DayWeather, OccasionId } from './types';
+import type { AskTurn } from './lib/ask';
 import { AppProvider, useAppValue } from './lib/appContext';
 import {
   eraseEverything,
@@ -146,6 +147,7 @@ function Shell({
   const [selectedOccasion, setSelectedOccasion] = useState<OccasionId | null>(null);
   const [confirmationCtx, setConfirmationCtx] = useState<ConfirmationContext | null>(null);
   const [viewingSavedId, setViewingSavedId] = useState<string | null>(null);
+  const [askTurns, setAskTurns] = useState<AskTurn[]>([]);
 
   const store = useWardrobeStore({ id: profile.id, starter: profile.starter });
   const app = useAppValue(profile, settings);
@@ -277,6 +279,8 @@ function Shell({
               <AskScreen
                 items={store.items}
                 calendarEntries={store.calendarEntries}
+                turns={askTurns}
+                onTurnsChange={setAskTurns}
                 onBack={() => navigate('home')}
                 onConfirmOutfit={handleConfirmOutfit}
                 onNavigate={navigate}

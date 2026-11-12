@@ -2,6 +2,7 @@
 // requests straight from the browser. Temperatures are kept in Celsius and converted for display.
 
 import type { DayWeather, WeatherInfo } from '../types';
+import { daysBetween } from './wear';
 
 export type TempUnit = 'C' | 'F';
 
@@ -102,6 +103,16 @@ export async function searchCities(query: string, fetchImpl: Fetch = fetch): Pro
     lat: r.latitude,
     lon: r.longitude,
   }));
+}
+
+// The forecast for a date. Open-Meteo's days follow the city's clock, so late at night here it
+// can already be tomorrow there (London seen from the US, the East Coast seen from the West).
+// When the list starts one day after the date asked for, its first day is the closest match.
+export function forecastFor(forecast: DayWeather[], dateISO: string): DayWeather | null {
+  const exact = forecast.find((d) => d.date === dateISO);
+  if (exact) return exact;
+  const first = forecast[0];
+  return first && daysBetween(dateISO, first.date) === 1 ? first : null;
 }
 
 const CACHE_KEY = 'fitcheck-forecast';

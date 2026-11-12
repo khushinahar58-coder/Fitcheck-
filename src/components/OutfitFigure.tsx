@@ -157,6 +157,9 @@ export default function OutfitFigure({ items, avatar, className }: Props) {
           (mesh.material as THREE.Material).dispose();
         }
       });
+      // Browsers only allow a handful of WebGL contexts, so give this one back now rather than
+      // waiting for garbage collection.
+      renderer.forceContextLoss();
       renderer.dispose();
       canvas.remove();
       stageRef.current = null;

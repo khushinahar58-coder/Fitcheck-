@@ -41,8 +41,9 @@ to effortless, or the user never reaches the value.
 **Stack:** React 18 · TypeScript · Vite · Tailwind · lucide-react · three.js (loaded only when a 3D figure is
 opened). No backend and no AI model. State lives in `localStorage`, one set of keys per profile
 (`fitcheck-wardrobe`, `fitcheck-saved`, `fitcheck-calendar`, with a `:profile-id` suffix for every profile after
-the first), plus `fitcheck-profiles`, `fitcheck-settings` and a one-hour forecast cache. The only network call the
-app makes itself is to Open-Meteo for the forecast and city search.
+the first), plus `fitcheck-profiles`, `fitcheck-settings` and a one-hour forecast cache. The only data the app
+sends anywhere is to Open-Meteo, for the forecast and city search; fonts load from Google Fonts and the first
+starter closet's photos from Pexels.
 
 **Where the logic lives** (`src/lib/`, all covered by `tests/`)
 

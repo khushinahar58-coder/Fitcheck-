@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ArrowLeft, Heart, RefreshCw, Check, Sparkles, ArrowRight, X, Plus, Trash2, Shirt, PersonStanding } from 'lucide-react';
 import type { ClothingItem, OccasionId, Outfit, OutfitSlot, Category, CalendarEntry } from '../types';
 import { OCCASIONS, CATEGORIES } from '../data';
@@ -56,6 +56,14 @@ export default function RecommendationsScreen({ occasionId, items, calendarEntri
   const [swapOverrides, setSwapOverrides] = useState<Record<string, string>>({});
   const [removedRoles, setRemovedRoles] = useState<Set<string>>(new Set());
   const [addedSlots, setAddedSlots] = useState<OutfitSlot[]>([]);
+
+  // If the looks change underneath (the forecast arrived), an added or removed piece must not
+  // carry over onto a different look.
+  const shownLookId = selectedOutfit?.id;
+  useEffect(() => {
+    setAddedSlots([]);
+    setRemovedRoles(new Set());
+  }, [shownLookId]);
 
   const handleSwap = (role: string, _currentItemId: string, newItemId: string) => {
     setSwapState(null);

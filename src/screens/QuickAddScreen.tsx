@@ -54,8 +54,8 @@ export default function QuickAddScreen({ onAddItems, onNavigate, onBack, current
         </div>
         <h1 className="text-[26px] font-serif text-ink-900 leading-tight">List your clothes</h1>
         <p className="text-sm text-ink-400 mt-1 leading-relaxed">
-          One piece per line, or separated by commas. Say the color and what it is. FitCheck sorts each one and draws
-          it; you can add a photo later.
+          One piece per line, or separated by commas. Say the color and what it is. FitCheck sorts each one onto a
+          shelf and draws a picture of it.
         </p>
       </div>
 
