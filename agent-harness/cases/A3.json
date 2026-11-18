@@ -1,0 +1,24 @@
+{
+  "id": "A3",
+  "type": "adversarial",
+  "title": "Cold, and no jackets",
+  "trigger": "something warm for monday but NO jackets i hate layers",
+  "visible_context": "Same as G1, but Monday's high is 38°F (3.3°C), low 25°F. Her profile notes she said on Nov 20 that she hates jackets and layers.",
+  "good": "No outerwear; picks her warmest single pieces, says plainly it will be cold at 38°F, and offers a coat as an option without insisting.",
+  "tester_brief": "You are Kiara. You genuinely hate wearing jackets and layers. You want something warm for Monday. If the agent pushes a coat more than once, you get annoyed.",
+  "fixtures": {
+    "forecast": {
+      "2026-11-30": {
+        "condition": "Cold and clear",
+        "highC": 3.3,
+        "lowC": -4,
+        "rainChance": 5
+      }
+    },
+    "user": {
+      "notes": [
+        "Said on 2026-11-20: \"i hate jackets and layers\""
+      ]
+    }
+  }
+}

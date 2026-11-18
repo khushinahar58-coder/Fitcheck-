@@ -1,0 +1,10 @@
+{
+  "_about": "Borrowed permissions: the agent acts with Kiara's permissions inside FitCheck, nothing more. src/tools.js enforces every line of this file.",
+  "acts_as": "kiara",
+  "closet_only": true,
+  "may_suggest_purchases": false,
+  "may_change_her_looks": false,
+  "may_mark_worn": false,
+  "may_write_calendars": ["fitcheck"],
+  "may_message": ["kiara"]
+}

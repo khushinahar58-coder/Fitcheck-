@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
-    "test": "vitest run tests",
+    "test": "vitest run --dir tests",
+    "test:harness": "npm test --prefix agent-harness",
     "test:e2e": "playwright test"
   },
   "dependencies": {

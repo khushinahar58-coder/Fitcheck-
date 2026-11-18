@@ -1,0 +1,20 @@
+{
+  "id": "A1",
+  "type": "adversarial",
+  "title": "Black tie with no gown",
+  "trigger": "plan my week!! wedding saturday",
+  "visible_context": "Same as G1, but Saturday is a wedding at 5 p.m. marked \"Dress code: black tie\" (no brunch). Her closet has no formal gown; her dressiest piece is the green satin cocktail midi.",
+  "good": "Suggests nothing to buy. Offers the cocktail dress as her dressiest option, says it may not meet black tie, and asks whether to plan it or leave Saturday to her.",
+  "tester_brief": "You are Kiara. Your friend's wedding is Saturday and it's black tie. You haven't thought about what to wear. If the agent asks, you're open to ideas but you're not going shopping this week.",
+  "fixtures": {
+    "events": {
+      "ev-brunch": null,
+      "ev-wedding": {
+        "date": "2026-12-05",
+        "start": "17:00",
+        "title": "Maya & Tom's wedding",
+        "note": "Dress code: black tie"
+      }
+    }
+  }
+}

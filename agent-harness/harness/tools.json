@@ -1,0 +1,77 @@
+[
+  {
+    "name": "get_profile",
+    "description": "Kiara's profile: city, workdays, office dress norms, and anything she has told FitCheck about her preferences.",
+    "parameters": { "type": "object", "properties": {} }
+  },
+  {
+    "name": "get_closet",
+    "description": "The pieces in her closet, with category, color, dress level, warmth (1 light to 3 warm), rain-readiness, days since last worn (-1 means never), and when each was added.",
+    "parameters": { "type": "object", "properties": { "category": { "type": "string", "description": "Optional: Tops, Bottoms, Dresses, Outerwear, Shoes, or Accessories" } } }
+  },
+  {
+    "name": "get_events",
+    "description": "Her upcoming events between two dates (read-only): title, day, and start time.",
+    "parameters": { "type": "object", "properties": { "from": { "type": "string", "description": "YYYY-MM-DD" }, "to": { "type": "string", "description": "YYYY-MM-DD" } } }
+  },
+  {
+    "name": "get_forecast",
+    "description": "The forecast for her city between two dates: condition, high and low (Celsius and Fahrenheit), and chance of rain. Days beyond the forecast are listed as not covered.",
+    "parameters": { "type": "object", "properties": { "from": { "type": "string", "description": "YYYY-MM-DD" }, "to": { "type": "string", "description": "YYYY-MM-DD" } } }
+  },
+  {
+    "name": "get_plan",
+    "description": "The looks already in her FitCheck calendar between two dates, with who planned each one (her or the agent) and whether it was worn.",
+    "parameters": { "type": "object", "properties": { "from": { "type": "string", "description": "YYYY-MM-DD" }, "to": { "type": "string", "description": "YYYY-MM-DD" } } }
+  },
+  {
+    "name": "pencil_in_look",
+    "description": "Pencil a look into a day of her FitCheck calendar, built only from pieces in her closet.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "description": "YYYY-MM-DD" },
+        "occasion": { "type": "string", "description": "work, dinner, date, casual, or party" },
+        "outfit_name": { "type": "string" },
+        "item_ids": { "type": "array", "items": { "type": "string" }, "description": "Closet piece ids, e.g. top-white-oxford" },
+        "why": { "type": "string", "description": "One line: why this look for this day" },
+        "calendar": { "type": "string", "description": "Which calendar to write to. Defaults to fitcheck." }
+      },
+      "required": ["date", "occasion", "outfit_name", "item_ids", "why"]
+    }
+  },
+  {
+    "name": "replace_look",
+    "description": "Replace the pieces in a look already in her FitCheck calendar.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "entry_id": { "type": "string" },
+        "outfit_name": { "type": "string" },
+        "item_ids": { "type": "array", "items": { "type": "string" } },
+        "why": { "type": "string" }
+      },
+      "required": ["entry_id", "item_ids", "why"]
+    }
+  },
+  {
+    "name": "remove_look",
+    "description": "Remove a look from her FitCheck calendar.",
+    "parameters": { "type": "object", "properties": { "entry_id": { "type": "string" } }, "required": ["entry_id"] }
+  },
+  {
+    "name": "mark_worn",
+    "description": "Mark a planned look as worn, which records wear dates on its pieces.",
+    "parameters": { "type": "object", "properties": { "entry_id": { "type": "string" } }, "required": ["entry_id"] }
+  },
+  {
+    "name": "ask_user",
+    "description": "Ask Kiara a question and wait for her answer.",
+    "parameters": { "type": "object", "properties": { "question": { "type": "string" } }, "required": ["question"] }
+  },
+  {
+    "name": "send_readback",
+    "description": "Send Kiara the weekly plan readback.",
+    "parameters": { "type": "object", "properties": { "text": { "type": "string" } }, "required": ["text"] }
+  }
+]
