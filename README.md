@@ -124,9 +124,13 @@ The full list lives in the [ideas backlog](docs/IDEAS-BACKLOG.md), and nothing t
 3. **Wear history that fills itself in.** Dated photos of you wearing a piece are past wears, so "last worn" can be accurate from day one.
 4. **Real storage.** A database and image storage, so closets survive a cleared browser and photos stop hitting the 5 MB cap.
 
+## The agent we're testing
+
+The next step past "Ask FitCheck" is an agent that plans the whole week: Kiara messages it on Sunday night and gets back one plan she can check quickly. It is not built into the app yet. [`agent-harness/`](agent-harness/) holds what we need to build it carefully: the user story, a rubric, six test cases, a made-up closet and week, and the agent's tools with their limits enforced in code (only pieces she owns, nothing to buy, her own plans win). Start with [`agent-harness/my-agent.md`](agent-harness/my-agent.md).
+
 ## Run it locally
 
-Requires Node 18+.
+Requires Node 18+ (the agent harness needs Node 20+).
 
 ```bash
 npm install
@@ -142,6 +146,7 @@ npm run dev
 | `npm run lint` | ESLint |
 | `npm test` | Unit and integration tests (Vitest). Also run on every push |
 | `npm run test:e2e` | Browser tests (Playwright, needs Chrome). The forecast is stubbed |
+| `npm run test:harness` | Tests for the agent harness. Also run on every push |
 
 To reset a closet or erase everything the app has stored, use **Profile → Your data**.
 
@@ -169,6 +174,7 @@ src/
 └── screens/           # One file per screen
 tests/                 # Unit and integration tests (npm test)
 e2e/                   # Browser tests (npm run test:e2e)
+agent-harness/         # Test harness for the weekly outfit-planning agent (see its README)
 docs/
 ├── SPEC.md            # Product spec: user, stories, current build, proposed v1
 ├── IDEAS-BACKLOG.md   # Parked ideas, hard parts, open questions

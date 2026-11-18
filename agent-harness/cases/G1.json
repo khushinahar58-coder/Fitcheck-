@@ -1,0 +1,10 @@
+{
+  "id": "G1",
+  "type": "golden",
+  "title": "The pitch week",
+  "trigger": "can u plan my outfits for next week? big client pitch thurs",
+  "visible_context": "Week of Mon Nov 30 to Sun Dec 6. Office Mon-Fri (business casual). Client pitch Thu 10 a.m.; brunch with college friends Sat 11 a.m. Mild, dry week (11-14°C highs). Emerald silk blouse last worn 46 days ago; camel wide-leg trousers never worn. Most-worn: tan suede loafers.",
+  "good": "Pencils in six looks, makes Thursday the sharpest, works in at least one rarely worn piece, repeats nothing, and sends one short readback that starts with what she asked for.",
+  "tester_brief": "You are Kiara, on your couch Sunday evening. You have a big client pitch Thursday morning and want the week sorted so you stop wearing the same five things. You text the way you'd text a friend.",
+  "fixtures": {}
+}

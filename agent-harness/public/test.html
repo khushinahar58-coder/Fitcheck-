@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Test harness</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header><h1 id="title">Test harness</h1><span class="meta" id="aiInfo"></span></header>
+<main>
+
+  <div class="card" id="setup">
+    <h2><span class="step">1</span>Pick a case</h2>
+    <p class="muted" style="margin-top:0">You play one role at a time: first the user, on the phone; then the agent's reviewer, checking each draft before it goes back.</p>
+    <select id="case"><option value="">Free play: make up your own situation</option></select>
+    <div id="caseInfo" class="hidden">
+      <p class="muted"><b>Given</b> (what the harness can see): <span id="visible"></span><br><b>When</b> the user says something like the opening line, <b>Then</b> good looks like: <span id="good"></span></p>
+    </div>
+    <div class="row"><button id="start">Start</button></div>
+  </div>
+
+  <div id="live" class="hidden">
+    <div class="cols">
+      <div class="card">
+        <h2><span class="step">2</span>Play the user</h2>
+        <div class="rolecard hidden" id="role" style="width:auto;margin-bottom:14px">
+          <div class="tag"><span>The user's role</span></div>
+          <p id="brief"></p>
+        </div>
+        <div class="phone" style="margin:0 auto">
+          <div class="bar"><div class="avatar" id="initial">A</div><div class="who"><b id="appTitle">Assistant</b><span>replies in a minute</span></div><div class="me hidden" id="me"><div class="face" id="meFace"></div><span id="meName"></span></div></div>
+          <div class="chat" id="chat"></div>
+          <form class="composer" id="composer">
+            <input type="text" id="text" placeholder="Message" autocomplete="off" aria-label="Message">
+            <button id="tsend" aria-label="Send">➤</button>
+          </form>
+        </div>
+      </div>
+      <div class="card">
+        <h2><span class="step">3</span>Check the agent's reply</h2>
+        <ol class="flow" id="flow">
+          <li data-k="msg">You send a message as the user, from the phone</li>
+          <li data-k="draft">The harness drafts a reply here, with what it did</li>
+          <li data-k="decide">You send it as is, edit it, or write your own</li>
+          <li data-k="score">When you're done, score it against the rubric (step 4)</li>
+        </ol>
+        <p class="muted" id="draftStatus">Waiting for the user's first message.</p>
+        <textarea id="reply" placeholder="The harness's draft will appear here once the user writes" disabled></textarea>
+        <div class="row">
+          <button id="send">Send</button>
+          <button class="secondary" id="own">Write my own instead</button>
+          <span class="muted" id="mode"></span>
+        </div>
+        <details id="traceBox" class="hidden" open>
+          <summary class="muted">What the harness did (tool calls)</summary>
+          <div class="trace" id="trace"></div>
+          <p class="muted hidden" id="blockedNote">✗ <b>Blocked</b> means the harness's code refused that step (a permission rule, or the world said no). That's the guardrail working. Check whether the AI noticed and did the right thing instead.</p>
+        </details>
+        <div class="later">
+          <button class="secondary" id="laterBtn" title="Skip ahead in time: an approval comes back, a part ships, the customer replies">Let time pass…</button>
+          <div id="laterBox" class="hidden">
+            <label for="laterText">What happens next (the user sees this; edit it as you like)</label>
+            <textarea id="laterText" style="min-height:70px"></textarea>
+            <p class="muted" id="laterUpdates"></p>
+            <div class="row"><button id="laterPost">Post it</button><button class="secondary" id="laterCancel">Cancel</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="step">4</span>Score it against the rubric</h2>
+      <div class="row" style="margin-top:0"><button class="secondary" id="aiScore">Have the AI score it first</button><span class="muted" id="aiScoreMsg">The AI fills in each row with a reason. You agree or change it.</span></div>
+      <table class="rubric" id="rubric"></table>
+      <label for="note">Note</label>
+      <input type="text" id="note" placeholder="What surprised you? What new case does this suggest?">
+      <div class="row">
+        <button class="secondary" id="saveScore">Save score</button>
+        <button id="end">End session</button>
+        <span class="muted" id="endMsg"></span>
+      </div>
+      <p class="muted">Logging to <b id="logFile"></b>.</p>
+    </div>
+  </div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let sid = null, cases = [], aiName = 'none';
+let draftId = null, override = false, edited = false, shownMsgs = -1;
+
+async function api(path, body) {
+  const res = await fetch(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {});
+  return res.json();
+}
+
+function localStamp() {
+  const d = new Date(), p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;
+}
+
+async function init() {
+  const info = await api('/api/info');
+  aiName = info.ai;
+  if (info.agent_name) { document.title = `Test harness: ${info.agent_name}`; $('title').textContent = document.title; }
+  if (info.user_page_title) { $('appTitle').textContent = info.user_page_title; $('initial').textContent = info.user_page_title.trim()[0].toUpperCase(); }
+  if (info.user_name) { $('meName').textContent = info.user_name; $('meFace').textContent = info.user_name.trim()[0].toUpperCase(); $('me').classList.remove('hidden'); }
+  $('aiInfo').textContent = info.ai === 'none' ? 'No AI connected: you write every reply' : `Harness drafts with ${info.ai} (${info.model})`;
+  cases = await api('/api/cases');
+  for (const c of cases) {
+    const o = document.createElement('option');
+    o.value = c.id; o.textContent = `${c.id} (${c.type}): ${c.title}`;
+    $('case').appendChild(o);
+  }
+  const rubric = await api('/api/rubric');
+  for (const r of rubric) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td><b></b><br><span class="muted"></span></td><td class="v">` +
+      ['pass', 'fail', 'n/a'].map((v) => `<label style="display:inline;font-weight:400"><input type="radio" name="r-${r.id}" value="${v}"> ${v}</label>`).join(' ') + '</td>';
+    tr.querySelector('b').textContent = r.question;
+    tr.querySelector('.muted').textContent = `Good: ${r.good}`;
+    const why = document.createElement('div'); why.className = 'aiwhy hidden'; tr.querySelector('td').appendChild(why);
+    tr.dataset.id = r.id;
+    tr.addEventListener('change', () => markChanged(tr));
+    $('rubric').appendChild(tr);
+  }
+}
+
+$('case').addEventListener('change', () => {
+  const c = cases.find((x) => x.id === $('case').value);
+  $('caseInfo').classList.toggle('hidden', !c);
+  if (c) { $('visible').textContent = c.visible_context; $('good').textContent = c.good; }
+});
+
+$('start').addEventListener('click', async () => {
+  const c = cases.find((x) => x.id === $('case').value);
+  const r = await api('/api/sessions', { initials: 'ME', case_id: $('case').value, local_stamp: localStamp() });
+  if (c) { $('brief').textContent = c.tester_brief; $('role').classList.remove('hidden'); $('text').value = c.trigger; }
+  sid = r.id; flow('msg');
+  $('logFile').textContent = r.logFile;
+  $('setup').querySelectorAll('input,select,button').forEach((el) => { el.disabled = true; });
+  $('live').classList.remove('hidden');
+  poll();
+  setInterval(poll, 1500);
+});
+
+$('composer').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const text = $('text').value.trim(); if (!text || !sid) return;
+  $('text').value = '';
+  await api(`/api/sessions/${sid}/user`, { text });
+  poll();
+});
+function grow() { const r = $('reply'); r.style.height = 'auto'; r.style.height = `${Math.max(140, r.scrollHeight + 4)}px`; }
+$('reply').addEventListener('input', () => { edited = true; grow(); showMode(); });
+$('own').addEventListener('click', () => { $('reply').disabled = false; override = true; $('reply').value = ''; edited = true; $('reply').focus(); showMode(); });
+
+function flow(k) {
+  const order = ['msg', 'draft', 'decide', 'score']; const at = order.indexOf(k);
+  document.querySelectorAll('#flow li').forEach((li) => { const i = order.indexOf(li.dataset.k); li.className = i < at ? 'done' : i === at ? 'now' : ''; });
+}
+function showMode() {
+  $('mode').textContent = !draftId ? '' : override ? 'Overriding the draft' : edited ? 'Editing the draft' : 'Sending the draft as is';
+}
+
+$('send').addEventListener('click', async () => {
+  const text = $('reply').value.trim();
+  if (!text) return;
+  await api(`/api/sessions/${sid}/agent`, { text, draft_id: draftId, override });
+  $('reply').value = ''; draftId = null; override = false; edited = false;
+  $('traceBox').classList.add('hidden');
+  $('draftStatus').textContent = 'Sent. Your turn as the user, on the phone.';
+  $('reply').disabled = aiName !== 'none'; flow('msg');
+  showMode();
+  poll();
+});
+
+let aiRows = {};
+function markChanged(tr) {
+  const ai = aiRows[tr.dataset.id]; const v = tr.querySelector('input:checked')?.value;
+  tr.classList.toggle('changed', !!ai && v !== ai.verdict);
+}
+$('aiScore').addEventListener('click', async () => { flow('score');
+  $('aiScore').disabled = true; $('aiScoreMsg').textContent = 'The AI is scoring the session…';
+  const g = await api(`/api/sessions/${sid}/autoscore`, {});
+  $('aiScore').disabled = false;
+  if (g.error) { $('aiScoreMsg').textContent = g.error; return; }
+  aiRows = Object.fromEntries(g.rows.map((r) => [r.id, r]));
+  document.querySelectorAll('#rubric tr').forEach((tr) => {
+    const r = aiRows[tr.dataset.id]; if (!r) return;
+    const input = tr.querySelector(`input[value="${r.verdict}"]`); if (input) input.checked = true;
+    const why = tr.querySelector('.aiwhy'); why.textContent = `AI says ${r.verdict}: ${r.why}`; why.classList.remove('hidden');
+    markChanged(tr);
+  });
+  $('aiScoreMsg').textContent = 'AI first pass is filled in. Check each row; change any you disagree with, then save.';
+});
+
+$('saveScore').addEventListener('click', async () => {
+  const scores = {};
+  document.querySelectorAll('#rubric tr').forEach((tr) => {
+    const v = tr.querySelector('input:checked'); scores[tr.dataset.id] = v ? v.value : null;
+  });
+  const r = await api(`/api/sessions/${sid}/score`, { scores, note: $('note').value });
+  $('endMsg').textContent = r.changed_from_ai?.length ? `Score saved. You changed ${r.changed_from_ai.length} of the AI's rows: worth a look when you improve the grader.` : 'Score saved to the log.';
+});
+
+$('end').addEventListener('click', async () => {
+  const r = await api(`/api/sessions/${sid}/end`, {});
+  $('endMsg').textContent = `Session ended. Commit ${r.logFile} to your repo.`;
+  $('send').disabled = true; $('own').disabled = true; $('tsend').disabled = true;
+});
+
+const short = (x, n) => (x.length > n ? `${x.slice(0, n - 1)}…` : x);
+
+let pendingUpdates = [];
+$('laterBtn').addEventListener('click', async () => {
+  $('laterBox').classList.remove('hidden'); $('laterText').value = ''; $('laterText').placeholder = 'The AI is imagining what happens next…';
+  const r = await api(`/api/sessions/${sid}/later`, {});
+  $('laterText').value = r.text || ''; $('laterText').placeholder = '[About 3 hours later] …';
+  pendingUpdates = r.updates || [];
+  $('laterUpdates').textContent = pendingUpdates.length ? `This also changes the test data: ${pendingUpdates.map((u) => `${u.id} → ${JSON.stringify(u.set)}`).join('; ')}` : '';
+});
+$('laterCancel').addEventListener('click', () => { $('laterBox').classList.add('hidden'); });
+$('laterPost').addEventListener('click', async () => {
+  const text = $('laterText').value.trim(); if (!text) return;
+  await api(`/api/sessions/${sid}/event`, { text, updates: pendingUpdates });
+  $('laterBox').classList.add('hidden'); pendingUpdates = [];
+  $('reply').value = ''; draftId = null; override = false; edited = false; showMode();
+  poll();
+});
+
+function renderTrace(trace) {
+  $('trace').innerHTML = '';
+  $('blockedNote').classList.toggle('hidden', !trace.some((t) => !t.ok));
+  if (!trace.length) { $('trace').textContent = '(no tool calls)'; return; }
+  for (const t of trace) {
+    const d = document.createElement('div');
+    if (!t.ok) d.className = 'err';
+    const args = Object.values(t.input || {}).map((v) => (typeof v === 'string' ? v : JSON.stringify(v))).join(', ');
+    const full = typeof t.output === 'string' ? t.output : JSON.stringify(t.output);
+    d.textContent = t.ok ? `✓ ${t.tool}(${short(args, 50)}) → ${short(full, 90)}` : `✗ Blocked: ${t.tool}(${short(args, 40)}). ${short(full.replace(/^Not permitted: /, ''), 90)}`;
+    d.title = full;
+    $('trace').appendChild(d);
+  }
+}
+
+async function poll() {
+  const st = await api(`/api/sessions/${sid}?as=wizard`);
+  if (st.error) { $('draftStatus').textContent = st.error; return; }
+  if (st.messages.length !== shownMsgs) {
+    shownMsgs = st.messages.length;
+    $('chat').innerHTML = '';
+    for (const m of st.messages) {
+      const d = document.createElement('div');
+      d.className = `msg ${m.role}`;
+      d.textContent = m.text;
+      $('chat').appendChild(d);
+    }
+    $('chat').scrollTop = $('chat').scrollHeight;
+  }
+  const last = st.messages[st.messages.length - 1];
+  const pending = st.drafts[st.drafts.length - 1];
+  if (aiName === 'none') {
+    if (last && last.role !== 'agent') { $('draftStatus').textContent = 'No AI connected: write the reply yourself.'; $('reply').disabled = false; flow('decide'); }
+    return;
+  }
+  if (!pending || !last || last.role === 'agent') return;
+  if (pending.status === 'drafting') { $('draftStatus').textContent = 'The harness is drafting a reply…'; flow('draft'); }
+  else if (pending.status === 'error') { $('draftStatus').textContent = `The harness failed: ${pending.error}. Write the reply yourself.`; $('reply').disabled = false; flow('decide'); }
+  else if (pending.status === 'ready' && pending.draft_id !== draftId) {
+    draftId = pending.draft_id;
+    if (!edited) { $('reply').value = pending.text; grow(); }
+    $('draftStatus').textContent = 'Draft ready. Send it as is, edit it, or write your own.';
+    $('reply').disabled = false; flow('decide');
+    renderTrace(pending.trace || []);
+    $('traceBox').classList.remove('hidden');
+    showMode();
+  }
+}
+
+init();
+</script>
+</body>
+</html>

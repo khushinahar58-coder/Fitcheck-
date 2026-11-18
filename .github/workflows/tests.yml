@@ -16,3 +16,5 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      # The agent harness has no dependencies; its tests run on Node's built-in runner.
+      - run: npm run test:harness

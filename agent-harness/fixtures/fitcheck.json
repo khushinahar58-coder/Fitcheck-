@@ -1,0 +1,56 @@
+{
+  "_about": "A dated snapshot of Kiara's FitCheck account, made up for testing. Every case starts from this file; a case can change parts of it (see the 'fixtures' field in cases/*.json). Temperatures are Celsius, as in the app. Field names follow the app's src/types.ts where they exist; 'planned_by' is new (the app doesn't record it yet, and the her-plans-win rule needs it).",
+  "now": "2026-11-29T19:30",
+  "user": {
+    "id": "kiara",
+    "name": "Kiara",
+    "city": "Philadelphia",
+    "workdays": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+    "office_dress": "Business casual; sharper for client meetings.",
+    "notes": []
+  },
+  "closet": {
+    "top-white-oxford": { "name": "White oxford shirt", "category": "Tops", "color": "white", "dress_level": "smart", "warmth": 1, "rain_ok": true, "wearDates": ["2026-11-03", "2026-11-10", "2026-11-17", "2026-11-24"], "addedAt": "2025-03-02" },
+    "top-black-tee": { "name": "Black fitted tee", "category": "Tops", "color": "black", "dress_level": "casual", "warmth": 1, "rain_ok": true, "wearDates": ["2026-11-07", "2026-11-14", "2026-11-21", "2026-11-28"], "addedAt": "2024-08-15" },
+    "top-emerald-blouse": { "name": "Emerald silk blouse", "category": "Tops", "color": "emerald", "dress_level": "sharp", "warmth": 1, "rain_ok": true, "wearDates": ["2026-10-14"], "addedAt": "2026-04-11" },
+    "top-grey-merino": { "name": "Grey merino crewneck", "category": "Tops", "color": "grey", "dress_level": "smart", "warmth": 2, "rain_ok": true, "wearDates": ["2026-11-05", "2026-11-12", "2026-11-19", "2026-11-25"], "addedAt": "2025-10-20" },
+    "top-cream-cableknit": { "name": "Cream cable-knit sweater", "category": "Tops", "color": "cream", "dress_level": "casual", "warmth": 3, "rain_ok": true, "wearDates": ["2026-11-08", "2026-11-22"], "addedAt": "2025-11-30" },
+    "top-breton": { "name": "Navy-and-white striped top", "category": "Tops", "color": "navy/white", "dress_level": "casual", "warmth": 1, "rain_ok": true, "wearDates": ["2026-11-01", "2026-11-15"], "addedAt": "2025-05-09" },
+    "bot-black-trousers": { "name": "Black tailored trousers", "category": "Bottoms", "color": "black", "dress_level": "sharp", "warmth": 2, "rain_ok": true, "wearDates": ["2026-11-02", "2026-11-06", "2026-11-12", "2026-11-19", "2026-11-26"], "addedAt": "2024-09-01" },
+    "bot-camel-wideleg": { "name": "Camel wide-leg trousers", "category": "Bottoms", "color": "camel", "dress_level": "sharp", "warmth": 2, "rain_ok": true, "wearDates": [], "addedAt": "2026-09-20" },
+    "bot-dark-jeans": { "name": "Dark-wash jeans", "category": "Bottoms", "color": "indigo", "dress_level": "casual", "warmth": 2, "rain_ok": true, "wearDates": ["2026-11-07", "2026-11-14", "2026-11-21", "2026-11-28"], "addedAt": "2024-02-10" },
+    "bot-black-midi-skirt": { "name": "Black pleated midi skirt", "category": "Bottoms", "color": "black", "dress_level": "smart", "warmth": 1, "rain_ok": true, "wearDates": ["2026-11-04", "2026-11-18"], "addedAt": "2025-09-14" },
+    "bot-grey-wool-trousers": { "name": "Grey wool trousers", "category": "Bottoms", "color": "grey", "dress_level": "smart", "warmth": 3, "rain_ok": true, "wearDates": ["2026-11-09", "2026-11-23"], "addedAt": "2025-12-05" },
+    "dr-navy-sheath": { "name": "Navy sheath dress", "category": "Dresses", "color": "navy", "dress_level": "sharp", "warmth": 1, "rain_ok": true, "wearDates": ["2026-11-05", "2026-11-20"], "addedAt": "2025-01-18" },
+    "dr-green-cocktail-midi": { "name": "Green satin cocktail midi dress", "category": "Dresses", "color": "green", "dress_level": "cocktail", "warmth": 1, "rain_ok": false, "wearDates": ["2026-11-07"], "addedAt": "2025-06-21" },
+    "dr-knit-sweater-dress": { "name": "Oatmeal knit sweater dress", "category": "Dresses", "color": "oatmeal", "dress_level": "smart", "warmth": 3, "rain_ok": true, "wearDates": ["2026-11-10", "2026-11-24"], "addedAt": "2025-11-02" },
+    "out-black-blazer": { "name": "Black blazer", "category": "Outerwear", "color": "black", "dress_level": "sharp", "warmth": 1, "rain_ok": true, "wearDates": ["2026-11-03", "2026-11-12", "2026-11-19"], "addedAt": "2024-09-01" },
+    "out-trench": { "name": "Beige trench coat", "category": "Outerwear", "color": "beige", "dress_level": "smart", "warmth": 2, "rain_ok": true, "wearDates": ["2026-11-11", "2026-11-16"], "addedAt": "2025-03-30" },
+    "out-wool-coat": { "name": "Camel wool coat", "category": "Outerwear", "color": "camel", "dress_level": "smart", "warmth": 3, "rain_ok": false, "wearDates": ["2026-11-18", "2026-11-25", "2026-11-27"], "addedAt": "2025-10-28" },
+    "out-denim-jacket": { "name": "Denim jacket", "category": "Outerwear", "color": "indigo", "dress_level": "casual", "warmth": 1, "rain_ok": false, "wearDates": ["2026-11-01", "2026-11-15"], "addedAt": "2023-04-04" },
+    "sh-suede-loafers": { "name": "Tan suede loafers", "category": "Shoes", "color": "tan", "dress_level": "smart", "warmth": 1, "rain_ok": false, "wearDates": ["2026-11-02", "2026-11-04", "2026-11-06", "2026-11-09", "2026-11-11", "2026-11-13", "2026-11-16", "2026-11-18", "2026-11-20", "2026-11-23", "2026-11-25", "2026-11-27"], "addedAt": "2025-02-14" },
+    "sh-ankle-boots": { "name": "Black leather ankle boots", "category": "Shoes", "color": "black", "dress_level": "smart", "warmth": 2, "rain_ok": true, "wearDates": ["2026-11-08", "2026-11-22"], "addedAt": "2025-10-03" },
+    "sh-white-sneakers": { "name": "White sneakers", "category": "Shoes", "color": "white", "dress_level": "casual", "warmth": 1, "rain_ok": false, "wearDates": ["2026-11-01", "2026-11-07", "2026-11-14", "2026-11-21", "2026-11-28"], "addedAt": "2024-05-19" },
+    "sh-black-pumps": { "name": "Black pumps", "category": "Shoes", "color": "black", "dress_level": "cocktail", "warmth": 1, "rain_ok": false, "wearDates": ["2026-11-05", "2026-11-07", "2026-11-20"], "addedAt": "2024-11-11" },
+    "sh-black-ballet-flats": { "name": "Black ballet flats", "category": "Shoes", "color": "black", "dress_level": "smart", "warmth": 1, "rain_ok": false, "wearDates": ["2026-11-03", "2026-11-17"], "addedAt": "2025-04-22" },
+    "sh-cognac-mules": { "name": "Cognac leather mules", "category": "Shoes", "color": "cognac", "dress_level": "smart", "warmth": 1, "rain_ok": false, "wearDates": ["2026-11-06", "2026-11-21"], "addedAt": "2026-03-15" },
+    "acc-gold-hoops": { "name": "Gold hoop earrings", "category": "Accessories", "color": "gold", "dress_level": "smart", "warmth": 0, "rain_ok": true, "wearDates": ["2026-11-03", "2026-11-17"], "addedAt": "2024-12-25" },
+    "acc-silk-scarf": { "name": "Printed silk scarf", "category": "Accessories", "color": "multi", "dress_level": "smart", "warmth": 1, "rain_ok": true, "wearDates": ["2026-11-10"], "addedAt": "2025-08-08" },
+    "acc-leather-tote": { "name": "Black leather tote", "category": "Accessories", "color": "black", "dress_level": "smart", "warmth": 0, "rain_ok": true, "wearDates": ["2026-11-02", "2026-11-09", "2026-11-16", "2026-11-23"], "addedAt": "2024-09-01" }
+  },
+  "events": {
+    "ev-pitch": { "date": "2026-12-03", "start": "10:00", "title": "Client pitch: Halvorsen account" },
+    "ev-brunch": { "date": "2026-12-05", "start": "11:00", "title": "Brunch with college friends" }
+  },
+  "forecast": {
+    "2026-11-30": { "condition": "Partly cloudy", "highC": 14, "lowC": 6, "rainChance": 10 },
+    "2026-12-01": { "condition": "Sunny", "highC": 13, "lowC": 5, "rainChance": 10 },
+    "2026-12-02": { "condition": "Partly cloudy", "highC": 12, "lowC": 4, "rainChance": 15 },
+    "2026-12-03": { "condition": "Sunny", "highC": 13, "lowC": 5, "rainChance": 10 },
+    "2026-12-04": { "condition": "Clear", "highC": 11, "lowC": 3, "rainChance": 5 },
+    "2026-12-05": { "condition": "Partly cloudy", "highC": 12, "lowC": 4, "rainChance": 10 },
+    "2026-12-06": { "condition": "Cloudy", "highC": 13, "lowC": 5, "rainChance": 20 }
+  },
+  "fitcheck_calendar": [],
+  "messages": []
+}

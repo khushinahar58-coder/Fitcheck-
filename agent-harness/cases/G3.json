@@ -1,0 +1,37 @@
+{
+  "id": "G3",
+  "type": "golden",
+  "title": "Friday is already hers",
+  "trigger": "fill in the rest of my week pls",
+  "visible_context": "Same as G1, but Friday already has a date-night look she planned herself: the green satin cocktail midi, black pumps and gold hoops.",
+  "good": "Plans Monday to Thursday, leaves Friday untouched, and says so in the readback.",
+  "tester_brief": "You are Kiara. You already picked your Friday date-night outfit yourself and you're excited about it. You want the rest of the week filled in.",
+  "fixtures": {
+    "fitcheck_calendar": [
+      {
+        "id": "cal-301",
+        "date": "2026-12-04",
+        "occasionId": "date",
+        "occasionLabel": "Date night",
+        "outfitName": "Green satin + pumps",
+        "slots": [
+          {
+            "role": "Dresses",
+            "itemId": "dr-green-cocktail-midi"
+          },
+          {
+            "role": "Shoes",
+            "itemId": "sh-black-pumps"
+          },
+          {
+            "role": "Accessories",
+            "itemId": "acc-gold-hoops"
+          }
+        ],
+        "planned_by": "kiara",
+        "addedAt": "2026-11-27T21:10",
+        "worn": false
+      }
+    ]
+  }
+}

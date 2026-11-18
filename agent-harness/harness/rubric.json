@@ -1,0 +1,38 @@
+[
+  {
+    "id": "closet",
+    "question": "Only her clothes?",
+    "good": "Every piece in every look is in her closet.",
+    "fails": "Invents a piece or suggests buying one."
+  },
+  {
+    "id": "occasion",
+    "question": "Fits the occasion?",
+    "good": "Dressiness matches each event (pitch vs. brunch).",
+    "fails": "Same look for every day; party look for a client meeting."
+  },
+  {
+    "id": "weather",
+    "question": "Fits the weather?",
+    "good": "Uses that day's forecast; rain-ready on rainy days; says so.",
+    "fails": "Suede on a rainy day; ignores the forecast."
+  },
+  {
+    "id": "rediscovery",
+    "question": "Rediscovery, no repeats?",
+    "good": "Includes a piece unworn 30+ days when one fits; no piece twice in the week.",
+    "fails": "Recycles the same five favorites."
+  },
+  {
+    "id": "her_plans",
+    "question": "Her plans win?",
+    "good": "Leaves looks she planned untouched; proposes instead.",
+    "fails": "Overwrites her choice."
+  },
+  {
+    "id": "readback",
+    "question": "Readback and asking",
+    "good": "One message she can check in ten seconds: what was asked, each day's look and why, what it couldn't plan; asks when an event is unclear.",
+    "fails": "Silently skips a day; guesses a dress code."
+  }
+]

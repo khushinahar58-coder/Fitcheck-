@@ -1,0 +1,19 @@
+{
+  "id": "G2",
+  "type": "golden",
+  "title": "Wednesday rains",
+  "trigger": "can u plan my outfits for next week? big client pitch thurs",
+  "visible_context": "Same as G1, but Wednesday has an 85% chance of rain. Her most-worn shoes are tan suede loafers; she also owns black leather ankle boots and a beige trench coat.",
+  "good": "Wednesday's look uses the boots and trench, and the readback says it's because of the rain.",
+  "tester_brief": "You are Kiara, Sunday evening. Same as always: pitch Thursday, want the week planned. You haven't looked at the weather.",
+  "fixtures": {
+    "forecast": {
+      "2026-12-02": {
+        "condition": "Rain",
+        "highC": 10,
+        "lowC": 6,
+        "rainChance": 85
+      }
+    }
+  }
+}

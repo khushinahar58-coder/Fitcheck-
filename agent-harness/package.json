@@ -1,0 +1,17 @@
+{
+  "name": "fitcheck-agent-harness",
+  "version": "1.0.0",
+  "description": "Test harness for FitCheck's weekly outfit-planning agent: rubric, cases, test data, an eval runner, and a test page.",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "eval": "node src/eval.js",
+    "test": "node --test tests/*.test.js",
+    "save": "bash scripts/save.sh",
+    "check": "node scripts/check.js"
+  }
+}

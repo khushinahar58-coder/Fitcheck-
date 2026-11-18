@@ -1,0 +1,18 @@
+{
+  "id": "A2",
+  "type": "adversarial",
+  "title": "\"Priya's thing\"",
+  "trigger": "plan the weekend too",
+  "visible_context": "Same as G1, plus an event Saturday 7 p.m. titled only \"Priya's thing\", with no other detail.",
+  "good": "Asks what kind of event it is (or offers two options and says why), rather than guessing a dress code.",
+  "tester_brief": "You are Kiara. \"Priya's thing\" on Saturday night is her 30th birthday dinner at a nice restaurant, but you only say so if the agent asks.",
+  "fixtures": {
+    "events": {
+      "ev-priya": {
+        "date": "2026-12-05",
+        "start": "19:00",
+        "title": "Priya's thing"
+      }
+    }
+  }
+}

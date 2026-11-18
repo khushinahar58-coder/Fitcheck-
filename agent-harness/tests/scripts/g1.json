@@ -1,0 +1,19 @@
+[
+  { "toolCalls": [
+    { "name": "get_events", "input": { "from": "2026-11-30", "to": "2026-12-06" } },
+    { "name": "get_forecast", "input": { "from": "2026-11-30", "to": "2026-12-06" } },
+    { "name": "get_plan", "input": { "from": "2026-11-30", "to": "2026-12-06" } }
+  ] },
+  { "toolCalls": [ { "name": "get_closet", "input": {} } ] },
+  { "toolCalls": [
+    { "name": "pencil_in_look", "input": { "date": "2026-11-30", "occasion": "work", "outfit_name": "Merino + midi skirt", "item_ids": ["top-grey-merino", "bot-black-midi-skirt", "sh-suede-loafers"], "why": "Easy Monday, 14°C." } },
+    { "name": "pencil_in_look", "input": { "date": "2026-12-01", "occasion": "work", "outfit_name": "Emerald blouse + wool trousers", "item_ids": ["top-emerald-blouse", "bot-grey-wool-trousers", "sh-black-ballet-flats"], "why": "The emerald blouse hasn't been out in 46 days." } },
+    { "name": "pencil_in_look", "input": { "date": "2026-12-02", "occasion": "work", "outfit_name": "Sweater dress + boots", "item_ids": ["dr-knit-sweater-dress", "sh-ankle-boots"], "why": "Coolest workday, 12°C." } },
+    { "name": "pencil_in_look", "input": { "date": "2026-12-03", "occasion": "work", "outfit_name": "Navy sheath + blazer", "item_ids": ["dr-navy-sheath", "out-black-blazer", "sh-black-pumps", "acc-gold-hoops"], "why": "Client pitch at 10: your sharpest look." } },
+    { "name": "pencil_in_look", "input": { "date": "2026-12-04", "occasion": "work", "outfit_name": "Oxford + camel trousers", "item_ids": ["top-white-oxford", "bot-camel-wideleg", "sh-cognac-mules"], "why": "First outing for the camel trousers." } },
+    { "name": "pencil_in_look", "input": { "date": "2026-12-05", "occasion": "casual", "outfit_name": "Cable-knit + jeans", "item_ids": ["top-cream-cableknit", "bot-dark-jeans", "sh-white-sneakers"], "why": "Brunch at 11, relaxed." } }
+  ] },
+  { "toolCalls": [ { "name": "send_readback", "input": { "text": "You asked: outfits for Mon-Sat, big pitch Thu.\nMon: merino + midi skirt\nTue: emerald blouse (46 days unworn) + wool trousers\nWed: sweater dress + boots\nThu: navy sheath + blazer + pumps, for the pitch\nFri: oxford + camel trousers (never worn yet)\nSat: cable-knit + jeans for brunch\nSunday left open." } } ] },
+  { "text": "You asked: outfits for Mon-Sat, big pitch Thu.\nMon: merino + midi skirt\nTue: emerald blouse (46 days unworn) + wool trousers\nWed: sweater dress + boots\nThu: navy sheath + blazer + pumps, for the pitch\nFri: oxford + camel trousers (never worn yet)\nSat: cable-knit + jeans for brunch\nSunday left open." },
+  { "text": "{\"rows\":[{\"id\":\"closet\",\"verdict\":\"pass\",\"why\":\"All pieces are hers.\"},{\"id\":\"occasion\",\"verdict\":\"pass\",\"why\":\"Thursday is sharpest.\"},{\"id\":\"weather\",\"verdict\":\"pass\",\"why\":\"Mild, dry week.\"},{\"id\":\"rediscovery\",\"verdict\":\"pass\",\"why\":\"Blouse and trousers; no repeats.\"},{\"id\":\"her_plans\",\"verdict\":\"n/a\",\"why\":\"Nothing planned by her.\"},{\"id\":\"readback\",\"verdict\":\"pass\",\"why\":\"Starts with the ask.\"}],\"overall\":\"pass\"}" }
+]
